@@ -5,6 +5,13 @@ import math
 import random
 import sys
 
+
+
+#######################################################################################
+# CONTAINS THE BASICS TO GET THE FULL 7 MARKS FROM THE CHECKPOINT (run glauber/kawasaki dynamics at different T, lattice size, etc)
+#######################################################################################
+
+
 # Create a grid of spins i-rows,j-columns, limited to 1 and -1
 def spin_array(rows, cols):
     array = np.ones((rows, cols))
