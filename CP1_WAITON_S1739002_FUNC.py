@@ -47,6 +47,16 @@ def energy_calc(array, J, lattice_size, i, j):
 
     return energy
 
+def total_energy_calc(array, J, lattice_size):
+    # takes the total energy of the current array, while considering overcounting of the energy
+    energy = 0
+    for i in range(lattice_size):
+        for j in range(lattice_size):
+            # calculate the energy using the previous NN calculation
+            energy += -(energy_calc(array, J, lattice_size, i, j))
+    # division by 4 to account for overcounting
+    return (energy/4)
+
 def kawasaki(array, lattice_size, T):
     # Performs kawasaki flip and determines if array should be updated
 
@@ -130,12 +140,13 @@ def iteration_kawasaki(iterations, lattice_size, T):
         for _ in range(lattice_size**2):
             # run kawasaki function to update array
             array = kawasaki(array, lattice_size, T)
-        # plot every 5th
-        if (i%5==0):
-            plt.cla()
-            im=plt.imshow(array, animated=True)
-            plt.draw()
-            plt.pause(0.0001)
+        ## plot every 5th
+        # commented out currently
+        #if (i%5==0):
+        #    plt.cla()
+        #    im=plt.imshow(array, animated=True)
+        #    plt.draw()
+        #    plt.pause(0.0001)
 
 
 def iteration_glauber(iterations, lattice_size, T, array=None):
@@ -146,33 +157,38 @@ def iteration_glauber(iterations, lattice_size, T, array=None):
 
     # Pull out the normalisation components
     N = len(array)
-    # calculate the number of steps covered each sweep
-    sweep_steps = (iterations-100)/10
-    # 1 over number of spins * sweeps, for M average squared and M squared average
-    #norm1, norm2 = 1/(N*N*sweep_steps), 1/(N*N*sweep_steps*sweep_steps)
+    # create energy and magnetism arrays
+    en1 = 0
+    en2 = 0
 
-    # create susceptibility and magnetism arrays
-    #sus = []
-    # mag and mag squared defined here
     mag1 = 0
     mag2 = 0
+
+    # Normalisation value
     sweep_no = 0
     for i in range(iterations):
         # find new matrix,
         for _ in range(lattice_size**2):
             # glauber flip and calculate delta_E then update spins
             array = glauber(array, lattice_size, T)
-     # plot every 5th
-        if (i%5==0):
-            plt.cla()
-            im=plt.imshow(array, animated=True)
-            plt.draw()
-            plt.pause(0.0001)
-        # collect magnetism values every 10 sweeps for calculation of susceptibility
+     ## plot every 5th
+     # commented out currently
+    #    if (i%5==0):
+    #        plt.cla()
+    #        im=plt.imshow(array, animated=True)
+    #        plt.draw()
+    #        plt.pause(0.0001)
+        # collect magnetism/energy values every 10 sweeps for calculation of susceptibility/heap capacity
         if (i>100) and (i%10==0):
             magg = mag_calc(array)
             mag1 = mag1 + magg
             mag2 = mag2 + magg*magg
+
+            energy = total_energy_calc(array, 1, lattice_size)
+            en1 = en1 + energy
+            en2 = en2 + energy*energy
+
+            # Can collect mag and energy lists here for each iteration of T, to get an error. But it cant be used for susceptibility and heat capacity, so why would you do that?
             # update sweep number for normalisation
             sweep_no += 1
         # calculate average magnetism and susceptibility
@@ -180,8 +196,9 @@ def iteration_glauber(iterations, lattice_size, T, array=None):
     norm1, norm2 = 1/(N*N*sweep_no), 1/(N*N*sweep_no*sweep_no)
     # make an intensive quality via averaging wrt array size and nSweeps
     av_sus, av_mag = susceptibility(mag1, mag2, T, norm1, norm2)
+    av_cap, av_en = heat_capacity(en1, en2, T, norm1, norm2)
 
-    return av_sus, av_mag, array
+    return av_sus, av_mag, av_cap, av_en, array
 
 
 
@@ -192,59 +209,62 @@ def mag_calc(array):
     M = np.sum(array)
     return M
 
+def heat_capacity(en1, en2,  T, norm1, norm2):
+    # calculates heat capacity and energy (intensive/normalised)
+    E = norm1*en1
+    heat_capacity = (norm1 * en2 - norm2*en1*en1)*1/(T**2)
+    return heat_capacity, E
 
 
 def susceptibility(M1, M2, T, norm1, norm2):
-    # takes an array and estimates the average value of total magnetisation in equilibrium state and susceptibility
-    # Average M is sum of all spins divided by the number of spins
-    # THIS IS WRONG N I THINK, WILL ASK ON FRIDAY CHECK MINUTE 50 OF LECTURE 2
-    #N = len(array)
-    #M = np.sum(M)/(N**2)
-    # average M^2 is the square of the sum of signs divided by number of spins. Because our len(array) squared is the total number of spins, the squares cancel.
-    # so, easier calculation (I THINK)
-    #M_squared = np.sum(M)**2/N**2
-    #susceptibility = (abs(M_squared) - M**2)*1/((N**2)*T)
-    # currently giving back raw magnetism
     # give back intensive mag and susceptibility
     susceptibility = (norm1*M2 - norm2*M1*M1)*1/T
     M = norm1*M1
     return susceptibility, M
 
 
-def collate_mag_susc_results_glauber(iterations, lattice_size):
+def collate_mXEC_results_glauber(iterations, lattice_size):
     # Function that will pass over multiple values of T (1->3, 0.1 increments)
     # Collate mag and susceptibility values from these values
 
-    # Create storage arrays for mag and susc
+    # Create storage arrays for mag, susc, energy, and heat capacity
     av_mag = []
     av_sus = []
+    av_cap = []
+    av_en = []
     T_list = []
     # Create first loop, T = 1
     T = 1
-    T_list.append(T)
-    sus, mag, array = iteration_glauber(iterations, lattice_size, T)
-    av_mag.append(abs(mag))
-    av_sus.append(sus)
-    print("Temperature: {:.2f}\nMagnetism: {:.4f}\nSusceptibility: {:.4f}\n".format(T, av_mag[0], av_sus[0]))
-    for i in range(19):
-        T += 0.1
+    # Create initial array
+    array = spin_array(lattice_size, lattice_size)
+    for i in range(21):
         # Update new info based on now T
-        sus, mag, array = iteration_glauber(iterations, lattice_size, T, array)
+        sus, mag, cap, en, array = iteration_glauber(iterations, lattice_size, T, array)
         # Append new info to array, SETTING TO ABSOLUTE RIGHT NOW BECAUSE OF FLIPS
         av_mag.append(abs(mag))
         av_sus.append(sus)
+        av_cap.append(cap)
+        av_en.append(abs(en))
         T_list.append(T)
-        print("Temperature: {:.2f}\nMagnetism: {:.4f}\nSusceptibility: {:.4f}\n".format(T, av_mag[i+1], av_sus[i+1]))
+        print("Temperature: {:.2f}\nMagnetism: {:.4f}\nSusceptibility: {:.4f}".format(T, av_mag[i], av_sus[i]))
+        print("Energy: {:.2f}\nHeat Capacity: {:.4f}\n".format(av_en[i], av_cap[i]))
+        T += 0.1
     # close the animation
-    print(av_mag)
-    print(av_sus)
     plt.close()
+    # Plot everything else
     plt.plot(T_list, av_mag)
     plt.show()
     plt.plot(T_list, av_sus)
     plt.show()
+    plt.plot(T_list, av_cap)
+    plt.show()
+    plt.plot(T_list, av_en)
+    plt.show()
+    # Then save
     pos_write(av_mag, "av_mag.txt")
     pos_write(av_sus, "av_sus.txt")
+    pos_write(av_cap, "av_cap.txt")
+    pos_write(av_en, "av_en.txt")
 
 
 
@@ -276,8 +296,8 @@ def pos_write(data, file_name):
 
 
 
-
-collate_mag_susc_results_glauber(5000, 50)
+# set to 10000 for real runs
+collate_mXEC_results_glauber(10000, 50)
 
 
 
