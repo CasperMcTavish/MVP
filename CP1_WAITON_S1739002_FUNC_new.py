@@ -185,13 +185,13 @@ def iteration_glauber(iterations, lattice_size, T, array=None):
 
             # collect in a list also for error calculation
             maglist.append(magg)
-            mag1 = mag1 + magg
-            mag2 = mag2 + magg*magg
+            #mag1 = mag1 + magg
+            #mag2 = mag2 + magg*magg
 
             energy = total_energy_calc(array, 1, lattice_size)
             enlist.append(energy)
-            en1 = en1 + energy
-            en2 = en2 + energy*energy
+            #en1 = en1 + energy
+            #en2 = en2 + energy*energy
 
             # Can collect mag and energy lists here for each iteration of T, to get an error. But it cant be used for susceptibility and heat capacity, so why would you do that?
             # update sweep number for normalisation
@@ -200,10 +200,39 @@ def iteration_glauber(iterations, lattice_size, T, array=None):
 
     norm1, norm2 = 1/(N*N*sweep_no), 1/(N*N*sweep_no*sweep_no)
     # make an intensive quality via averaging wrt array size and nSweeps
-    av_sus, av_mag = susceptibility(mag1, mag2, T, norm1, norm2)
-    av_cap, av_en = heat_capacity(en1, en2, T, norm1, norm2)
+    av_sus, av_mag = susceptibility(maglist, T, norm1, norm2)
+    av_cap, av_en = heat_capacity(enlist, T, norm1, norm2)
 
-    return av_sus, av_mag, av_cap, av_en, array
+    # Setup bootstrap to collect error on sus and heat capacity
+    # collect k measurements of heat capacity and get error between them
+    caplist = []
+    for k in range(len(enlist)):
+        # collect list of l length of uniform random variables from enlist and maglist to give susceptibility values
+        enlist_new = []
+        for l in range(len(enlist)):
+            # collect random variables from the list and use that to get energy list
+            r = np.random.randint(0, len(enlist))
+            enlist_new.append(enlist[r])
+    # Take the new heat capacity with this list and then add to list for error calculation
+        caplist.append(heat_capacity(enlist_new, T, norm1, norm2)[0])
+    # Calculate error on capacity here
+
+    # take average of squared and normal components
+    cap1 = 0
+    cap2 = 0
+    # add up all components, and squared components
+    for i in range(len(caplist)):
+        # Add C up and Csquared up, then find average by multiplying by the normalisations.
+        cap1 = cap1 + caplist[i]
+        cap2 = cap2 + caplist[i]*caplist[i]
+    # normalise/take to get average
+    squared_cap = cap2 * norm1
+    cap_squared = norm2 * cap1 * cap1
+    # caluclate error by taking square root
+    er_cap = np.sqrt(squared_cap - cap_squared)
+
+    return av_sus, av_mag, av_cap, av_en, er_cap, array
+    #return av_sus, av_mag, av_cap, av_en, er_cap, er_sus, array
 
 
 
@@ -214,14 +243,26 @@ def mag_calc(array):
     M = np.sum(array)
     return M
 
-def heat_capacity(en1, en2,  T, norm1, norm2):
+def heat_capacity(enlist,  T, norm1, norm2):
+    # Format energy as expected to find heat capacity
+    en1 = 0
+    en2 = 0
+    for i in range(len(enlist)):
+        en1 = en1 + enlist[i]
+        en2 = en2 + enlist[i]*enlist[i]
     # calculates heat capacity and energy (intensive/normalised)
     E = norm1*en1
     heat_capacity = (norm1 * en2 - norm2*en1*en1)*1/(T**2)
     return heat_capacity, E
 
 
-def susceptibility(M1, M2, T, norm1, norm2):
+def susceptibility(maglist, T, norm1, norm2):
+    # Format magnetism correctly
+    M1 = 0
+    M2 = 0
+    for i in range(len(maglist)):
+        M1 = M1 + maglist[i]
+        M2 = M2 + maglist[i]*maglist[i]
     # give back intensive mag and susceptibility
     susceptibility = (norm1*M2 - norm2*M1*M1)*1/T
     M = norm1*M1
@@ -232,10 +273,12 @@ def collate_mXEC_results_glauber(iterations, lattice_size):
     # Function that will pass over multiple values of T (1->3, 0.1 increments)
     # Collate mag and susceptibility values from these values
 
-    # Create storage arrays for mag, susc, energy, and heat capacity
+    # Create storage arrays for mag, susc, energy, and heat capacity, and their errors
     av_mag = []
     av_sus = []
+    er_sus = []
     av_cap = []
+    er_cap = []
     av_en = []
     T_list = []
     # Create first loop, T = 1
@@ -244,12 +287,14 @@ def collate_mXEC_results_glauber(iterations, lattice_size):
     array = spin_array(lattice_size, lattice_size)
     for i in range(21):
         # Update new info based on now T
-        sus, mag, cap, en, array = iteration_glauber(iterations, lattice_size, T, array)
+        #sus, mag, cap, en, cap_er, sus_er, array = iteration_glauber(iterations, lattice_size, T, array)
+        sus, mag, cap, en, cap_er, array = iteration_glauber(iterations, lattice_size, T, array)
         # Append new info to array, SETTING TO ABSOLUTE RIGHT NOW BECAUSE OF FLIPS
         av_mag.append(abs(mag))
         av_sus.append(sus)
         av_cap.append(cap)
         av_en.append(abs(en))
+        er_cap.append(cap_er)
         T_list.append(T)
         print("Temperature: {:.2f}\nMagnetism: {:.4f}\nSusceptibility: {:.4f}".format(T, av_mag[i], av_sus[i]))
         print("Energy: {:.2f}\nHeat Capacity: {:.4f}\n".format(av_en[i], av_cap[i]))
@@ -261,7 +306,7 @@ def collate_mXEC_results_glauber(iterations, lattice_size):
     plt.show()
     plt.plot(T_list, av_sus)
     plt.show()
-    plt.plot(T_list, av_cap)
+    plt.errorbar(T_list, av_cap, yerr = er_cap)
     plt.show()
     plt.plot(T_list, av_en)
     plt.show()
@@ -270,6 +315,7 @@ def collate_mXEC_results_glauber(iterations, lattice_size):
     pos_write(av_sus, "av_sus.txt")
     pos_write(av_cap, "av_cap.txt")
     pos_write(av_en, "av_en.txt")
+    pos_write(er_cap, "er_cap.txt")
 
 
 
@@ -283,11 +329,6 @@ def pos_write(data, file_name):
     ...
     :param positions:       The list of positions to be written to the file
     '''
-    # write file in the correct format
-    # eg:
-    # 3430 2323
-    # 3232 0202
-    # ...
 
     # creates a file if it doesnt already exist
     with open(file_name, "w") as f:
@@ -302,7 +343,7 @@ def pos_write(data, file_name):
 
 
 # set to 10000 for real runs
-collate_mXEC_results_glauber(10000, 50)
+collate_mXEC_results_glauber(1000, 50)
 
 
 
