@@ -225,9 +225,10 @@ def iteration_glauber(iterations, lattice_size, T, array=None):
         # Add C up and Csquared up, then find average by multiplying by the normalisations.
         cap1 = cap1 + caplist[i]
         cap2 = cap2 + caplist[i]*caplist[i]
-    # normalise/take to get average
-    squared_cap = cap2 * norm1
-    cap_squared = norm2 * cap1 * cap1
+    # get average, as already normalised
+    squared_cap = cap2 * 1/(len(caplist))
+    # Need to square average here
+    cap_squared = 1/(len(caplist))*1/(len(caplist)) * cap1 * cap1
     # caluclate error by taking square root
     er_cap = np.sqrt(squared_cap - cap_squared)
 
@@ -293,7 +294,7 @@ def collate_mXEC_results_glauber(iterations, lattice_size):
         av_mag.append(abs(mag))
         av_sus.append(sus)
         av_cap.append(cap)
-        av_en.append(abs(en))
+        av_en.append(en)
         er_cap.append(cap_er)
         T_list.append(T)
         print("Temperature: {:.2f}\nMagnetism: {:.4f}\nSusceptibility: {:.4f}".format(T, av_mag[i], av_sus[i]))
@@ -343,7 +344,7 @@ def pos_write(data, file_name):
 
 
 # set to 10000 for real runs
-collate_mXEC_results_glauber(1000, 50)
+collate_mXEC_results_glauber(10000, 50)
 
 
 
