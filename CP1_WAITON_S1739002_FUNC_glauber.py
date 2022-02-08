@@ -6,6 +6,16 @@ import random
 import sys
 import time
 
+
+
+###########################
+
+# THIS IS THE AUTOMATION CODE FOR GLAUBER
+# OUTPUTS THE CORRECT FILETYPES, ACROSS 10000 ITERATIONS FOR EACH TEMPERATURES 1.0 -> 3.0
+
+###########################
+
+
 # Create a grid of spins i-rows,j-columns, limited to 1 and -1
 def spin_array(rows, cols):
     array = np.ones((rows, cols))
@@ -134,10 +144,7 @@ def iteration_glauber(iterations, lattice_size, T, array=None):
             # Can collect mag and energy lists here for each iteration of T, to get an error. But it cant be used for susceptibility and heat capacity, so why would you do that?
             # update sweep number for normalisation
 
-        # calculate average magnetism and susceptibility
-
-
-    # make an intensive quality via averaging wrt array size and nSweeps
+    # calculate average magnetism and susceptibility
     av_sus, av_mag = susceptibility(maglist, T)
     av_cap, av_en = heat_capacity(enlist, T)
 
@@ -171,8 +178,7 @@ def iteration_glauber(iterations, lattice_size, T, array=None):
 
 
 
-#iteration_kawasaki(1000, 50, 1)
-#iteration_glauber(1000, 50, 1)
+
 def mag_calc(array):
     # calculate the total magnetism
     M = np.sum(array)
@@ -209,7 +215,10 @@ def collate_mXEC_results_glauber(iterations, lattice_size):
     # Create first loop, T = 1
     T = 1
     # Create initial array
-    array = spin_array(lattice_size, lattice_size)
+    # For glauber, first array will be all spin up/down to help with equilibration.
+    array = np.ones((lattice_size, lattice_size))
+
+    # Loop based on T
     for i in range(21):
         # Update new info based on now T
         #sus, mag, cap, en, cap_er, sus_er, array = iteration_glauber(iterations, lattice_size, T, array)
@@ -225,16 +234,38 @@ def collate_mXEC_results_glauber(iterations, lattice_size):
         print("Temperature: {:.2f}\nMagnetism: {:.4f}\nSusceptibility: {:.4f}".format(T, av_mag[i], av_sus[i]))
         print("Energy: {:.2f}\nHeat Capacity: {:.4f}\n".format(av_en[i], av_cap[i]))
         T += 0.1
-    # close the animation
+    # close the animation, if it still exists
     plt.close()
+
+
     # Plot everything else
+    plt.scatter(T_list, av_mag)
     plt.plot(T_list, av_mag)
+    plt.xlabel("Temperature")
+    plt.ylabel("Magnetisation (normalised)")
+    plt.title("Glauber Magnetisation against Temperature")
+    plt.savefig("Glauber_Mag.png")
     plt.show()
+    plt.scatter(T_list, av_sus)
     plt.plot(T_list, av_sus)
+    plt.xlabel("Temperature")
+    plt.ylabel("Susceptibility")
+    plt.title("Glauber Susceptibility against Temperature")
+    plt.savefig("Glauber_Sus.png")
     plt.show()
+    plt.errorbar(T_list, av_cap, yerr = er_cap, fmt='o')
     plt.errorbar(T_list, av_cap, yerr = er_cap)
+    plt.xlabel("Temperature")
+    plt.ylabel("Heat Capacity")
+    plt.title("Glauber Heat Capacity against Temperature (with errors)")
+    plt.savefig("Glauber_Cap.png")
     plt.show()
+    plt.scatter(T_list, av_en)
     plt.plot(T_list, av_en)
+    plt.xlabel("Temperature")
+    plt.ylabel("Energy")
+    plt.title("Glauber Energy against Temperature")
+    plt.savefig("Glauber_En.png")
     plt.show()
     # Then save
     pos_write(av_mag, "av_mag.txt")
@@ -270,33 +301,3 @@ def pos_write(data, file_name):
 
 # set to 10000 for real runs
 collate_mXEC_results_glauber(10000, 50)
-
-
-
-'''
-# MAIN FUNCTION
-def run_code(model, lattice, T, iterations):
-    # convert sys arguments from string to floats/ints
-    model = int(model)
-    lattice = int(lattice)
-    T = float(T)
-    iterations = int(iterations)
-    # choose which model
-    if (model == 0):
-        print("Running Glauber...\nTemperature: {:.2f}\nLattice Size: {:.2f}\nSweeps: {:.2f}".format(T, lattice, iterations))
-        iteration_glauber(iterations, lattice, T)
-    else:
-        print("Running Kawasaki...\nTemperature: {:.2f}\nLattice Size: {:.2f}\nSweeps: {:.2f}".format(T, lattice, iterations))
-        iteration_kawasaki(iterations, lattice, T)
-
-# Check if main script.
-if __name__ == "__main__":
-    # Check to make sure enough arguments
-    if len(sys.argv) == 5:
-        run_code(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
-    else:
-        print("\nScript takes exactly 4 arguments, " + str(len(sys.argv)-1) + " were given")
-        print("\nPlease input:\n\n DYNAMIC MODEL\n  0 - Glauber\n  1 - Kawasaki\n\n LATTICE SIZE\n\n TEMPERATURE\n\n ITERATIONS")
-else:
-    print("Ising model functions imported successfully...")
-'''

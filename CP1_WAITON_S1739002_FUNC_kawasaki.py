@@ -6,6 +6,15 @@ import random
 import sys
 import time
 
+
+###########################
+
+# THIS IS THE AUTOMATION CODE FOR KAWASAKI
+# OUTPUTS THE CORRECT FILETYPES, ACROSS 10000 ITERATIONS FOR EACH TEMPERATURES 1.0 -> 3.0
+
+###########################
+
+
 # Create a grid of spins i-rows,j-columns, limited to 1 and -1
 def spin_array(rows, cols):
     array = np.ones((rows, cols))
@@ -132,24 +141,6 @@ def glauber(array, lattice_size, T):
 
 
 
-#def iteration_kawasaki(iterations, lattice_size, T):
-#    # make initial array
-#    array = spin_array(lattice_size, lattice_size)
-#
-#    for i in range(iterations):
-#        # find new matrix within n^2 loop
-#        for _ in range(lattice_size**2):
-#            # run kawasaki function to update array
-#            array = kawasaki(array, lattice_size, T)
-#        ## plot every 5th
-#        # commented out currently
-#        #if (i%5==0):
-#        #    plt.cla()
-#        #    im=plt.imshow(array, animated=True)
-#        #    plt.draw()
-#        #    plt.pause(0.0001)
-
-
 def iteration_kawasaki(iterations, lattice_size, T, array=None):
     # Start timer for easy tracking
     start = time.time()
@@ -177,8 +168,6 @@ def iteration_kawasaki(iterations, lattice_size, T, array=None):
 
             energy = total_energy_calc(array, 1, lattice_size)
             enlist.append(energy)
-            #en1 = en1 + energy
-            #en2 = en2 + energy*energy
 
 
         # calculate average magnetism and susceptibility
@@ -217,9 +206,6 @@ def iteration_kawasaki(iterations, lattice_size, T, array=None):
 
 
 
-
-#iteration_kawasaki(1000, 50, 1)
-#iteration_glauber(1000, 50, 1)
 def mag_calc(array):
     # calculate the total magnetism
     M = np.sum(array)
@@ -245,26 +231,21 @@ def collate_mXEC_results_kawasaki(iterations, lattice_size):
     # Function that will pass over multiple values of T (1->3, 0.1 increments)
     # Collate mag and susceptibility values from these values
 
-    # Create storage arrays for mag, susc, energy, and heat capacity, and their errors
-    #av_mag = []
-    #av_sus = []
-    #er_sus = []
+    # Create storage arrays for energy and heat capacity with errors
+
     av_cap = []
     er_cap = []
     av_en = []
     T_list = []
     # Create first loop, T = 1
     T = 1
-    # Create initial array
-    array = spin_array(lattice_size, lattice_size)
+    # Create initial array, set to half is spin up, half is spin down (ground state)
+    array1 = np.ones((lattice_size, int(lattice_size/2)))
+    array2 = np.zeros((lattice_size, int(lattice_size/2)))
+    array = np.concatenate((array1, array2), axis=1)
     for i in range(21):
         # Update new info based on now T
-        #sus, mag, cap, en, cap_er, sus_er, array = iteration_glauber(iterations, lattice_size, T, array)
         cap, en, cap_er, array = iteration_kawasaki(iterations, lattice_size, T, array)
-        #sus, mag, cap, en, array = iteration_glauber(iterations, lattice_size, T, array)
-        # Append new info to array, SETTING TO ABSOLUTE RIGHT NOW BECAUSE OF FLIPS
-        #av_mag.append(abs(mag))
-        #av_sus.append(sus)
         av_cap.append(cap)
         av_en.append(en)
         er_cap.append(cap_er)
@@ -272,20 +253,25 @@ def collate_mXEC_results_kawasaki(iterations, lattice_size):
         print("Temperature: {:.2f}".format(T))
         print("Energy: {:.2f}\nHeat Capacity: {:.4f}\n".format(av_en[i], av_cap[i]))
         T += 0.1
-    # close the animation
-    plt.close()
-    # Plot everything else
-    #plt.plot(T_list, av_mag)
-    #plt.show()
-    #plt.plot(T_list, av_sus)
-    #plt.show()
+
+    # Plot and save
+    plt.errorbar(T_list, av_cap, yerr = er_cap, fmt='o')
     plt.errorbar(T_list, av_cap, yerr = er_cap)
+    plt.xlabel("Temperature")
+    plt.ylabel("Heat Capacity")
+    plt.title("Kawasaki Heat Capacity against Temperature (with errors)")
+    plt.savefig("Kawasaki_Cap.png")
     plt.show()
+    plt.scatter(T_list, av_en)
     plt.plot(T_list, av_en)
+    plt.xlabel("Temperature")
+    plt.ylabel("Energy")
+    plt.title("Kawasaki Energy against Temperature")
+    plt.savefig("Kawasaki_En.png")
     plt.show()
-    # Then save
-    #pos_write(av_mag, "av_mag.txt")
-    #pos_write(av_sus, "av_sus.txt")
+
+    # Then save as text files
+
     pos_write(av_cap, "av_cap.txt")
     pos_write(av_en, "av_en.txt")
     pos_write(er_cap, "er_cap.txt")
@@ -317,33 +303,3 @@ def pos_write(data, file_name):
 
 # set to 10000 for real runs
 collate_mXEC_results_kawasaki(10000, 50)
-
-
-
-'''
-# MAIN FUNCTION
-def run_code(model, lattice, T, iterations):
-    # convert sys arguments from string to floats/ints
-    model = int(model)
-    lattice = int(lattice)
-    T = float(T)
-    iterations = int(iterations)
-    # choose which model
-    if (model == 0):
-        print("Running Glauber...\nTemperature: {:.2f}\nLattice Size: {:.2f}\nSweeps: {:.2f}".format(T, lattice, iterations))
-        iteration_glauber(iterations, lattice, T)
-    else:
-        print("Running Kawasaki...\nTemperature: {:.2f}\nLattice Size: {:.2f}\nSweeps: {:.2f}".format(T, lattice, iterations))
-        iteration_kawasaki(iterations, lattice, T)
-
-# Check if main script.
-if __name__ == "__main__":
-    # Check to make sure enough arguments
-    if len(sys.argv) == 5:
-        run_code(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
-    else:
-        print("\nScript takes exactly 4 arguments, " + str(len(sys.argv)-1) + " were given")
-        print("\nPlease input:\n\n DYNAMIC MODEL\n  0 - Glauber\n  1 - Kawasaki\n\n LATTICE SIZE\n\n TEMPERATURE\n\n ITERATIONS")
-else:
-    print("Ising model functions imported successfully...")
-'''
