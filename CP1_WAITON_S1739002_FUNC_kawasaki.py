@@ -241,8 +241,10 @@ def collate_mXEC_results_kawasaki(iterations, lattice_size):
     T = 1
     # Create initial array, set to half is spin up, half is spin down (ground state)
     array1 = np.ones((lattice_size, int(lattice_size/2)))
-    array2 = np.zeros((lattice_size, int(lattice_size/2)))
+    array2 = -np.ones((lattice_size, int(lattice_size/2)))
     array = np.concatenate((array1, array2), axis=1)
+    print(array.shape)
+    print(array)
     for i in range(21):
         # Update new info based on now T
         cap, en, cap_er, array = iteration_kawasaki(iterations, lattice_size, T, array)
