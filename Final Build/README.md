@@ -36,4 +36,5 @@ They then output text files and graphs of the results.
 Glauber includes Energy, Heat Capacity (with errors), Magnetism and Susceptibility.
 Kawasaki includes Energy and Heat Capacity (with errors).
 
-These can be found separately in the 'GLAUBER FILES' and 'KAWASAKI FILES' sections.
+The plots can be found separately in the 'GLAUBER FILES' and 'KAWASAKI FILES' sections.
+Here you can see that the characteristics of the two different dynamical systems are correct for the different characteristics, and the critical point can be estimated around T = 2.3

@@ -5,9 +5,9 @@ Full build is in 'Final Build' section
 
 CP1_WAITON_S1739002 is the prefix to all programs.
 
-=============================
+=
 Simulation and visualisation:
-=============================
+============================
 
 _BOILERPLATE is the basic program that allows you to define all the relevant variables, and see the simulations individually for Glauber and Kawasaki.
 Run the code once and you will see the output:
@@ -30,7 +30,7 @@ Please input:
 
  This tells you exactly how to manipulate the code as you need.
 
-=======================
+=
 Iteration and Plotting:
 =======================
 
