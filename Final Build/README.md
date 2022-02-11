@@ -1,8 +1,5 @@
 # MVP
 
-Full build is in 'Final Build' section
-'Previous Builds' contains obsolete code that I want to keep.
-
 CP1_WAITON_S1739002 is the prefix to all programs.
 
 =============================
