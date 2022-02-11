@@ -9,8 +9,8 @@ Simulation and visualisation:
 _BOILERPLATE is the basic program that allows you to define all the relevant variables, and see the simulations individually for Glauber and Kawasaki.
 Run the code once and you will see the output:
 
-
-`Script takes exactly 4 arguments, 0 were given
+```
+Script takes exactly 4 arguments, 0 were given
 
 Please input:
 
@@ -22,8 +22,8 @@ Please input:
 
  TEMPERATURE
 
- ITERATIONS`
-
+ ITERATIONS
+```
 
  This tells you exactly how to manipulate the code as you need.
 
