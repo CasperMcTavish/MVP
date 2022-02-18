@@ -41,13 +41,11 @@ def gol_nn_check(array, lattice_size, i, j):
     top = (i-1, j)
     bottom = ((i+1) % lattice_size, j)
 
-
     # Diagonal directions
     top_left = (i-1, j-1)
     top_right = (i-1, (j+1) % lattice_size)
     bottom_left = ((i+1) % lattice_size , j-1)
     bottom_right = ((i+1) % lattice_size , (j+1) % lattice_size)
-
 
     # Return sum of nearest neighbours.
     nn_sum = sum([
@@ -61,12 +59,7 @@ def gol_nn_check(array, lattice_size, i, j):
                array[bottom_right[0], bottom_right[1]]
                ])
 
-
-
     return nn_sum
-
-
-
 
 
 # Updated the array based on the game of life rules.
@@ -80,9 +73,8 @@ def array_update(array, lattice_size):
     # Dead cell checks:
     #       3 alive neighbours = LIFE
 
-    # Copy to new array (slow but preserves old array format)
+    # Copy to new array (slow but preserves old array format). You need to remember previous format to ensure iteration works
     new_array = np.copy(array)
-
 
     # scan across entire array
     for i in range(lattice_size):
