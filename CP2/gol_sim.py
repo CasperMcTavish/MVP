@@ -21,8 +21,8 @@ def gol_array(lattice_size):
     array = np.zeros((lattice_size, lattice_size), dtype=bool)
 
     # create loop that goes through each row, flips a coin and makes that value negative dependent on this
-    for i in range(cols):
-        for j in range(rows):
+    for i in range(lattice_size):
+        for j in range(lattice_size):
             coinflip = round(random.uniform(0,1))
             if (coinflip == 1):
                 array[i,j] = True
@@ -65,49 +65,6 @@ def gol_nn_check(array, lattice_size, i, j):
 
     return nn_sum
 
-'''
-def gol_nn_check(array, lattice_size, i, j):
-    # Because we only need to consider number of nearest neighbours, can just sum the array at the end.
-
-    # Only need to consider boundaries when adding, as array index should immediately loop back on itself if it becomes negative
-
-    # Create new array that represents nearest neighbours of each XY
-
-    nn_array = np.zeros((lattice_size, lattice_size))
-
-    for i in range(lattice_size):
-        for j in range(lattice_size):
-            # Cardinal directions
-            left = (i, j-1)
-            right = (i, (j+1) % lattice_size)
-            top = (i-1, j)
-            bottom = ((i+1) % lattice_size, j)
-
-
-            # Diagonal directions
-            top_left = (i-1, j-1)
-            top_right = (i-1, (j+1) % lattice_size)
-            bottom_left = ((i+1) % lattice_size , j-1)
-            bottom_right = ((i+1) % lattice_size , (j+1) % lattice_size)
-
-
-            # Return sum of nearest neighbours.
-            nn_sum = sum([
-                       array[left[0], left[1]],
-                       array[right[0], right[1]],
-                       array[top[0], top[1]],
-                       array[bottom[0], bottom[1]],
-                       array[top_left[0], top_left[1]],
-                       array[top_right[0], top_right[1]],
-                       array[bottom_left[0], bottom_left[1]],
-                       array[bottom_right[0], bottom_right[1]]
-                       ])
-
-            # Fill in array
-            nn_array[i,j] = nn_sum
-
-    return nn_array
-'''
 
 
 
@@ -171,8 +128,8 @@ def glider_array(lattice_size):
 def main(lattice_size, sim_type, iterations):
 
     # Define array
-    #array = gol_array(lattice_size)
-    array = glider_array(lattice_size)
+    array = gol_array(lattice_size)
+    #array = glider_array(lattice_size)
     # Iterate over array
     for i in range(iterations):
 
@@ -182,7 +139,7 @@ def main(lattice_size, sim_type, iterations):
             plt.cla()
             im=plt.imshow(array, animated=True)
             plt.draw()
-            plt.pause(0.25)
+            plt.pause(0.01)
 
 
         # Update array
@@ -192,7 +149,7 @@ def main(lattice_size, sim_type, iterations):
 
 
 
-main(10, 0, 100)
+main(50, 0, 100)
 # Testing apparatus
 #array = np.zeros((5, 5), dtype=bool)
 #array[3, 3] = True
@@ -201,3 +158,54 @@ main(10, 0, 100)
 #print(array)
 #nn_check = gol_nn_check(array, 5, 3, 3)
 #print(nn_check)
+
+
+
+
+
+
+
+# Dead code, ideas that didnt make it:
+'''
+def gol_nn_check(array, lattice_size, i, j):
+    # Because we only need to consider number of nearest neighbours, can just sum the array at the end.
+
+    # Only need to consider boundaries when adding, as array index should immediately loop back on itself if it becomes negative
+
+    # Create new array that represents nearest neighbours of each XY
+
+    nn_array = np.zeros((lattice_size, lattice_size))
+
+    for i in range(lattice_size):
+        for j in range(lattice_size):
+            # Cardinal directions
+            left = (i, j-1)
+            right = (i, (j+1) % lattice_size)
+            top = (i-1, j)
+            bottom = ((i+1) % lattice_size, j)
+
+
+            # Diagonal directions
+            top_left = (i-1, j-1)
+            top_right = (i-1, (j+1) % lattice_size)
+            bottom_left = ((i+1) % lattice_size , j-1)
+            bottom_right = ((i+1) % lattice_size , (j+1) % lattice_size)
+
+
+            # Return sum of nearest neighbours.
+            nn_sum = sum([
+                       array[left[0], left[1]],
+                       array[right[0], right[1]],
+                       array[top[0], top[1]],
+                       array[bottom[0], bottom[1]],
+                       array[top_left[0], top_left[1]],
+                       array[top_right[0], top_right[1]],
+                       array[bottom_left[0], bottom_left[1]],
+                       array[bottom_right[0], bottom_right[1]]
+                       ])
+
+            # Fill in array
+            nn_array[i,j] = nn_sum
+
+    return nn_array
+'''
