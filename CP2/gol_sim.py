@@ -114,14 +114,77 @@ def glider_array(lattice_size):
         array[m+1, m] = True
 
         array[m+1, m-1] = True
+    else:
+        print("WARNING: not enough space to make glider, returning empty array instead")
+        array = np.zeros((lattice_size, lattice_size), dtype=bool)
+
+
     return array
 
 
-def main(lattice_size, sim_type, iterations):
+def oscil_creator(m, n, array):
+    # Coordinates for m oscillator
+    array[m-1, n] = True
+    array[m-2, n] = True
+    array[m-1, n-1] = True
+    array[m-1, n+1] = True
+    array[m, n-1] = True
+    array[m, n+1] = True
+    array[m+1, n-1] = True
+    array[m+1, n+1] = True
+
+
+def oscil_array(lattice_size):
+    # only works for arrays larger than 10
+    if (lattice_size >= 10):
+        array = np.zeros((lattice_size, lattice_size), dtype=bool)
+
+
+
+        # Choose central point and create oscillator around it
+
+        m = int(lattice_size//2)
+
+        # Construct initial conditions for a nice oscillator
+        oscil_creator(m, m, array)
+
+        # For a larger lattice, add more! This is a lot of code, but it all does the same thing
+        if lattice_size == 50:
+            n = m + 10
+            l = m - 10
+            oscil_creator(n, n, array)
+            oscil_creator(n, l, array)
+            oscil_creator(l, l, array)
+            oscil_creator(l, n, array)
+
+        return array
+
+
+
+    else:
+        print("WARNING: not enough space to make oscillator, returning empty array instead")
+        array = np.zeros((lattice_size, lattice_size), dtype=bool)
+
+
+
+def gol_sim(lattice_size, sim_type, iterations):
+    # sim_type
+    # 0 = random array
+    # 1 = glider in centre array
+
+
 
     # Define array
-    array = gol_array(lattice_size)
-    #array = glider_array(lattice_size)
+    if sim_type == 0:
+        print("Producing random simulation:")
+        array = gol_array(lattice_size)
+    elif sim_type == 1:
+        print("Producing glider simulation:")
+        array = glider_array(lattice_size)
+    elif sim_type == 2:
+        print("Producing oscillator simulation:")
+        array = oscil_array(lattice_size)
+
     # Iterate over array
     for i in range(iterations):
 
@@ -141,7 +204,7 @@ def main(lattice_size, sim_type, iterations):
 
 
 
-main(50, 0, 100)
+gol_sim(50, 2, 100)
 # Testing apparatus
 #array = np.zeros((5, 5), dtype=bool)
 #array[3, 3] = True
