@@ -58,10 +58,6 @@ def expl_oscil_creator(m, n, array):
     array[m-1, n-2] = True
     array[m, n-2] = True
 
-
-
-
-
 ######################
 # ARRAY CREATION
 ######################
@@ -123,7 +119,6 @@ def glider_array(lattice_size):
 ####
 # OSCILLATOR ARRAY
 ####
-
 
 def oscil_array(lattice_size):
     # only works for arrays larger than 10
@@ -320,8 +315,6 @@ def gol_sim_run(lattice_size, sim_type, iterations, equilibrium):
         return i
 
 
-
-
 # CALL FUNCTION
 # check if not imported
 if __name__ == "__main__":
@@ -339,7 +332,6 @@ if __name__ == "__main__":
 # MISC FUNCTIONS
 ################################
 # May not be used explicitly here, but are used in scripts that import this file
-
 
 def pos_write(data, file_name):
     '''
@@ -359,66 +351,3 @@ def pos_write(data, file_name):
             pos = pos.strip("[]")
             pos = pos.replace(",", "")
             f.write(pos + "\n")
-
-
-
-
-# Testing apparatus
-#array = np.zeros((5, 5), dtype=bool)
-#array[3, 3] = True
-#array[4, 4] = True
-#array[2, 2] = True
-#print(array)
-#nn_check = gol_nn_check(array, 5, 3, 3)
-#print(nn_check)
-
-
-
-
-
-
-
-# Dead code, ideas that didnt make it:
-'''
-def gol_nn_check(array, lattice_size, i, j):
-    # Because we only need to consider number of nearest neighbours, can just sum the array at the end.
-
-    # Only need to consider boundaries when adding, as array index should immediately loop back on itself if it becomes negative
-
-    # Create new array that represents nearest neighbours of each XY
-
-    nn_array = np.zeros((lattice_size, lattice_size))
-
-    for i in range(lattice_size):
-        for j in range(lattice_size):
-            # Cardinal directions
-            left = (i, j-1)
-            right = (i, (j+1) % lattice_size)
-            top = (i-1, j)
-            bottom = ((i+1) % lattice_size, j)
-
-
-            # Diagonal directions
-            top_left = (i-1, j-1)
-            top_right = (i-1, (j+1) % lattice_size)
-            bottom_left = ((i+1) % lattice_size , j-1)
-            bottom_right = ((i+1) % lattice_size , (j+1) % lattice_size)
-
-
-            # Return sum of nearest neighbours.
-            nn_sum = sum([
-                       array[left[0], left[1]],
-                       array[right[0], right[1]],
-                       array[top[0], top[1]],
-                       array[bottom[0], bottom[1]],
-                       array[top_left[0], top_left[1]],
-                       array[top_right[0], top_right[1]],
-                       array[bottom_left[0], bottom_left[1]],
-                       array[bottom_right[0], bottom_right[1]]
-                       ])
-
-            # Fill in array
-            nn_array[i,j] = nn_sum
-
-    return nn_array
-'''
