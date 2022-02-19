@@ -58,6 +58,47 @@ def expl_oscil_creator(m, n, array):
     array[m-1, n-2] = True
     array[m, n-2] = True
 
+
+def single_glider_creator(m, n, array):
+
+
+    for i in range(6):
+        array[m, n-1-i] = True
+        array[m, n+i] = True
+
+    for i in range(4):
+        array[m-2, n-1-i] = True
+        array[m-2, n+i] = True
+
+        array[m+2, n-1-i] = True
+        array[m+2, n+i] = True
+
+
+    for i in range(2):
+        array[m-4, n-1-i] = True
+        array[m-4, n+i] = True
+
+        array[m+4, n-1-i] = True
+        array[m+4, n+i] = True
+
+
+    # 3 absorbing blocks to remove extra Gliders
+    array[m-8, n-7] = True
+    array[m-8, n-8] = True
+    array[m-9, n-7] = True
+    array[m-9, n-8] = True
+
+    array[m+8, n-7] = True
+    array[m+8, n-8] = True
+    array[m+9, n-7] = True
+    array[m+9, n-8] = True
+
+    array[m+8, n+7] = True
+    array[m+8, n+8] = True
+    array[m+9, n+7] = True
+    array[m+9, n+8] = True    
+
+
 ######################
 # ARRAY CREATION
 ######################
@@ -84,7 +125,7 @@ def gol_array(lattice_size):
 
 
 ####
-# GLIDER ARRAY
+# MANY GLIDER ARRAY
 ####
 
 # Create an array with a glider right in the middle if there is space
@@ -150,6 +191,36 @@ def oscil_array(lattice_size):
     else:
         print("WARNING: not enough space to make oscillator, returning empty array instead")
         array = np.zeros((lattice_size, lattice_size), dtype=bool)
+
+
+
+####
+# SINGULAR GLIDER ARRAY
+####
+
+
+# Create an array with a glider right in the middle if there is space
+def sing_glider_array(lattice_size):
+    # If there is space, make glider
+    # Choose central point and create glider around it
+    m = int(lattice_size//2)
+    array = np.zeros((lattice_size, lattice_size), dtype=bool)
+
+    # check lattice size for what type of glider you should make
+    if (lattice_size > 4) and lattice_size != 50:
+        glider_creator(m, m, 0, array)
+    # If 50x50, make a brigade of little gliders
+    elif lattice_size == 50:
+
+        # create glider initial conditions here.
+        single_glider_creator(m, m, array)
+
+    else:
+        print("WARNING: not enough space to make glider, returning empty array instead")
+        array = np.zeros((lattice_size, lattice_size), dtype=bool)
+
+    return array
+
 
 
 ######################
@@ -254,6 +325,9 @@ def gol_sim_run(lattice_size, sim_type, iterations, equilibrium):
     elif sim_type == 2:
         print("Producing oscillator simulation...")
         array = oscil_array(lattice_size)
+    elif sim_type == 3:
+        print("Producing singular glider simulation...")
+        array = sing_glider_array(lattice_size)
 
     # If only visualising, EQ = FALSE
     if equilibrium == False:
@@ -267,7 +341,7 @@ def gol_sim_run(lattice_size, sim_type, iterations, equilibrium):
                 plt.cla()
                 im=plt.imshow(array, animated=True)
                 plt.draw()
-                plt.pause(0.001)
+                plt.pause(0.2)
 
 
             # Update array
@@ -325,7 +399,7 @@ if __name__ == "__main__":
         gol_sim_run(int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
     else:
         print("\nScript takes exactly 4 arguments, " + str(len(sys.argv)-1) + " were given")
-        print("\nPlease input:\n\n LATTICE SIZE\n\n INITIAL CONDITIONS\n  0 - Random\n  1 - Glider\n  2 - Oscillator\n\n ITERATIONS\n\n EQUILIBRIUM TESTING\n  0 - Run for visualisation purposes\n  1 - Run to collect iteration at which equilibrium is reached\n      WARNING: Will run UNTIL equilibrium is reached, may be longer than iterations inputted.")
+        print("\nPlease input:\n\n LATTICE SIZE\n\n INITIAL CONDITIONS\n  0 - Random\n  1 - Many Gliders\n  2 - Oscillator\n  3 - Single Glider\n\n ITERATIONS\n\n EQUILIBRIUM TESTING\n  0 - Run for visualisation purposes\n  1 - Run to collect iteration at which equilibrium is reached\n      WARNING: Will run UNTIL equilibrium is reached, may be longer than iterations inputted.")
 
 
 ################################
