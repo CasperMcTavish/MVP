@@ -6,97 +6,14 @@ import random
 import sys
 import scipy
 
-
+# Import all the unique GOL objects
+from templates import *
 
 ##################################################################################################
 # GAME OF LIFE BASIC FUNCTIONALITY
 # INCLUDES ANIMATION (TOGGLE-ABLE) AND SIMULATION
 ##################################################################################################
 
-######################
-# OBJECT CREATION
-######################
-# PRODUCES SPECIFIC SHAPES THAT CAN BE APPLIED DIRECTLY TO ARRAY FOR INITIAL CONDITIONS
-
-def glider_creator(m, n, orientation, array):
-    # orientation determines which way they will go
-    if orientation == 0:
-        array[m-1, n] = True
-        array[m, n+1] = True
-        array[m+1, n+1] = True
-        array[m+1, n] = True
-        array[m+1, n-1] = True
-    elif orientation == 1:
-        array[m+1, n] = True
-        array[m, n-1] = True
-        array[m-1, n-1] = True
-        array[m-1, n] = True
-        array[m-1, n+1] = True
-
-
-def oscil_creator(m, n, array):
-    # Coordinates for m oscillator
-    array[m-1, n] = True
-    array[m-2, n] = True
-    array[m-1, n-1] = True
-    array[m-1, n+1] = True
-    array[m, n-1] = True
-    array[m, n+1] = True
-    array[m+1, n-1] = True
-    array[m+1, n+1] = True
-
-
-# Produces a little explosion that ends with an oscillation
-def expl_oscil_creator(m, n, array):
-    array[m+1, n] = True
-    array[m-1, n] = True
-    array[m, n+1] = True
-    array[m, n-1] = True
-    array[m+1, n+2] = True
-    array[m-1, n+2] = True
-    array[m+1, n-2] = True
-    array[m-1, n-2] = True
-    array[m, n-2] = True
-
-
-def single_glider_creator(m, n, array):
-
-
-    for i in range(6):
-        array[m, n-1-i] = True
-        array[m, n+i] = True
-
-    for i in range(4):
-        array[m-2, n-1-i] = True
-        array[m-2, n+i] = True
-
-        array[m+2, n-1-i] = True
-        array[m+2, n+i] = True
-
-
-    for i in range(2):
-        array[m-4, n-1-i] = True
-        array[m-4, n+i] = True
-
-        array[m+4, n-1-i] = True
-        array[m+4, n+i] = True
-
-
-    # 3 absorbing blocks to remove extra Gliders
-    array[m-8, n-7] = True
-    array[m-8, n-8] = True
-    array[m-9, n-7] = True
-    array[m-9, n-8] = True
-
-    array[m+8, n-7] = True
-    array[m+8, n-8] = True
-    array[m+9, n-7] = True
-    array[m+9, n-8] = True
-
-    array[m+8, n+7] = True
-    array[m+8, n+8] = True
-    array[m+9, n+7] = True
-    array[m+9, n+8] = True    
 
 
 ######################
@@ -309,11 +226,16 @@ def array_update(array, lattice_size):
 # INITIALISER/ITERATOR
 # initialises and iterates over the array, updating it via above function
 # equilibrium is True of False. If True, will shut down and output i, otherwise will just run until iterations are finished.
-def gol_sim_run(lattice_size, sim_type, iterations, equilibrium):
+def gol_sim_run(lattice_size, sim_type, iterations, mode):
     # sim_type
     # 0 = random array
     # 1 = glider in centre array
     # 2 = oscillator
+
+    # mode
+    # 0 - visualisation
+    # 1 - equilibrium hunting
+    # 2 - glider COM
 
     # Define array
     if sim_type == 0:
@@ -329,8 +251,8 @@ def gol_sim_run(lattice_size, sim_type, iterations, equilibrium):
         print("Producing singular glider simulation...")
         array = sing_glider_array(lattice_size)
 
-    # If only visualising, EQ = FALSE
-    if equilibrium == False:
+    # If only visualising, MODE = 0
+    if mode == 0:
 
         # Iterate over array
         for i in range(iterations):
@@ -341,7 +263,7 @@ def gol_sim_run(lattice_size, sim_type, iterations, equilibrium):
                 plt.cla()
                 im=plt.imshow(array, animated=True)
                 plt.draw()
-                plt.pause(0.2)
+                plt.pause(0.05)
 
 
             # Update array
@@ -349,7 +271,9 @@ def gol_sim_run(lattice_size, sim_type, iterations, equilibrium):
 
         # at end, return 0. This is to be consistent for the equilibrium testing component
         return 0
-    elif equilibrium == True:
+
+    # For finding equilibrium, MODE = 1
+    elif mode == 1:
         print("Searching for equilibrium...")
         i = 0
         eq_val = 0
@@ -388,6 +312,29 @@ def gol_sim_run(lattice_size, sim_type, iterations, equilibrium):
         # Once equilibrium has been found, return i (iteration number)
         return i
 
+    # Glider calculations
+    elif mode == 2:
+        print("Glider speed calculations...")
+
+        # create COM array
+        com_list = []
+
+        for i in range(iterations):
+            # Update array
+            array, n_a_sites = array_update(array, lattice_size)
+
+            # after 50 iterations (to let state become singular glider), every 10 iterations, find COM of glider
+            if ((i>50) and i%10==0):
+                # find COM and write to array
+
+        # plot COM
+        # save COM list
+        # call function that fits straight line to COM list (when there are 10 points in a row with no interruptions, away from start and end.)
+
+        # at end, return 0. This is to be consistent for the equilibrium testing component
+        return 0
+
+
 
 # CALL FUNCTION
 # check if not imported
@@ -399,7 +346,7 @@ if __name__ == "__main__":
         gol_sim_run(int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
     else:
         print("\nScript takes exactly 4 arguments, " + str(len(sys.argv)-1) + " were given")
-        print("\nPlease input:\n\n LATTICE SIZE\n\n INITIAL CONDITIONS\n  0 - Random\n  1 - Many Gliders\n  2 - Oscillator\n  3 - Single Glider\n\n ITERATIONS\n\n EQUILIBRIUM TESTING\n  0 - Run for visualisation purposes\n  1 - Run to collect iteration at which equilibrium is reached\n      WARNING: Will run UNTIL equilibrium is reached, may be longer than iterations inputted.")
+        print("\nPlease input:\n\n LATTICE SIZE\n\n INITIAL CONDITIONS\n  0 - Random\n  1 - Many Gliders\n  2 - Oscillator\n  3 - Single Glider\n\n ITERATIONS\n\n MODE\n  0 - Run for visualisation purposes\n  1 - Run to collect iteration at which equilibrium is reached\n      WARNING: Will run UNTIL equilibrium is reached, may be longer than iterations inputted.\n  2 - Run to find glider speed and COM over time\n      WARNING: For initial conditions choose 'Single Glider', or expect inaccurate results.")
 
 
 ################################
