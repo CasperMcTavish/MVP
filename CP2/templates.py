@@ -5,6 +5,9 @@ import numpy as np
 ######################
 # PRODUCES SPECIFIC SHAPES THAT CAN BE APPLIED DIRECTLY TO ARRAY FOR INITIAL CONDITIONS
 
+# orientation
+# graph is plotted with top left being 0,0. So m-1 goes 'up', and n+1 goes 'right'
+
 def glider_creator(m, n, orientation, array):
     # orientation determines which way they will go
     if orientation == 0:

@@ -316,8 +316,9 @@ def gol_sim_run(lattice_size, sim_type, iterations, mode):
     elif mode == 2:
         print("Glider speed calculations...")
 
-        # create COM array
+        # create COM array and time list
         com_list = []
+        iter_list = []
 
         for i in range(iterations):
             # Update array
@@ -325,10 +326,120 @@ def gol_sim_run(lattice_size, sim_type, iterations, mode):
 
             # after 50 iterations (to let state become singular glider), every 10 iterations, find COM of glider
             if ((i>50) and i%10==0):
+                print("Sweep {}/{}...".format(i,iterations))
                 # find COM and write to array
+                # take max and min values in x and y,
 
-        # plot COM
+
+                # Until scanned through to find first live cell, keep as False
+                # will do screendoor scanning across X and Y
+
+                # x_min
+
+                check = False
+                p = 0
+
+                while(check==False):
+                    # If a living cell is in column p, change check to true
+                    if True in array[:, p]:
+                        check = True
+                        x_min = p
+                    p += 1
+
+
+                # x_max, starting from last column and scanning backwards
+
+                check = False
+                p = lattice_size-1
+
+                while(check==False):
+                    # If a living cell is in column p, change check to true
+                    if True in array[:, p]:
+                        check = True
+                        x_max = p
+                    p -= 1
+
+
+                # y_min
+
+                check = False
+                p = 0
+
+                while(check==False):
+                    # If a living cell is in row p, change check to true
+                    if True in array[p, :]:
+                        check = True
+                        y_min = p
+                    p += 1
+
+                # y_max, starting from last column and scanning backwards
+
+                p = lattice_size-1
+                check = False
+
+                while(check==False):
+                    # If a living cell is in row p, change check to true
+                    if True in array[p, :]:
+                        check = True
+                        y_max = p
+                    p -= 1
+
+                # ABOVE CODE CAN BE MADE SHORTER VIA ITERATION
+
+                # if xmax/ymax - xmin/ymin > lattice_size/2 assume boundary crossing and ignore
+                if (x_max - x_min > lattice_size/2) or (y_max - y_min > lattice_size/2):
+                    continue;
+                # if not boundary crossing, calculate COM
+                else:
+                    x_numer = 0
+                    x_denom = 0
+                    y_numer = 0
+                    y_denom = 0
+                    for j in range(lattice_size):
+                        for k in range(lattice_size):
+                            # Collect sums
+                            x_numer += j * array[j,k]
+                            x_denom += array[j,k]
+
+                            y_numer += k * array[j,k]
+                            y_denom += array[j,k]
+                    # After summation, divide and collect
+                    x_mass = (x_numer/x_denom)
+                    y_mass = (y_numer/y_denom)
+                    iter_list.append(i)
+                    com_list.append([x_mass,y_mass])
+
+
+
+
+        # plot COM XY plot
+        com_list = np.array(com_list)
+        plt.scatter(com_list[:,0],com_list[:,1])
+        plt.xlabel("X position")
+        plt.ylabel("Y position")
+        plt.title("Flight of glider across XY coordinates, with each point taken 10 iterations apart")
+        plt.savefig("glider_path.png")
+        plt.show()
+
+        # plot X COM wrt time
+        plt.scatter(iter_list,com_list[:,0])
+        plt.xlabel("Iteration number/Time")
+        plt.ylabel("X position")
+        plt.title("Flight of glider across X coordinates and time ")
+        plt.savefig("glider_path_Xtime.png")
+        plt.show()
+
+        # plot Y COM wrt time
+        plt.scatter(iter_list,com_list[:,1])
+        plt.xlabel("Iteration number/Time")
+        plt.ylabel("Y position")
+        plt.title("Flight of glider across Y coordinates and time ")
+        plt.savefig("glider_path_Ytime.png")
+        plt.show()
+
+
         # save COM list
+        pos_write(com_list, "com_list.txt")
         # call function that fits straight line to COM list (when there are 10 points in a row with no interruptions, away from start and end.)
 
         # at end, return 0. This is to be consistent for the equilibrium testing component
@@ -336,17 +447,6 @@ def gol_sim_run(lattice_size, sim_type, iterations, mode):
 
 
 
-# CALL FUNCTION
-# check if not imported
-if __name__ == "__main__":
-
-    # Check to make sure enough arguments
-    if len(sys.argv) == 5:
-        # run code, force as integers
-        gol_sim_run(int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
-    else:
-        print("\nScript takes exactly 4 arguments, " + str(len(sys.argv)-1) + " were given")
-        print("\nPlease input:\n\n LATTICE SIZE\n\n INITIAL CONDITIONS\n  0 - Random\n  1 - Many Gliders\n  2 - Oscillator\n  3 - Single Glider\n\n ITERATIONS\n\n MODE\n  0 - Run for visualisation purposes\n  1 - Run to collect iteration at which equilibrium is reached\n      WARNING: Will run UNTIL equilibrium is reached, may be longer than iterations inputted.\n  2 - Run to find glider speed and COM over time\n      WARNING: For initial conditions choose 'Single Glider', or expect inaccurate results.")
 
 
 ################################
@@ -372,3 +472,33 @@ def pos_write(data, file_name):
             pos = pos.strip("[]")
             pos = pos.replace(",", "")
             f.write(pos + "\n")
+
+
+def read_file(filename):
+    with open(filename) as f:
+        contents = f.readlines()
+
+    if (len(contents) > 1):
+        print("File read of length: " + str(len(contents)))
+    else:
+        print("File length is too short to process (please include more positions)")
+
+    # convert to floats in this case
+    return contents
+
+
+
+
+
+
+# CALL FUNCTION
+# check if not imported
+if __name__ == "__main__":
+
+    # Check to make sure enough arguments
+    if len(sys.argv) == 5:
+        # run code, force as integers
+        gol_sim_run(int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
+    else:
+        print("\nScript takes exactly 4 arguments, " + str(len(sys.argv)-1) + " were given")
+        print("\nPlease input:\n\n LATTICE SIZE\n\n INITIAL CONDITIONS\n  0 - Random\n  1 - Many Gliders\n  2 - Oscillator\n  3 - Single Glider\n\n ITERATIONS\n\n MODE\n  0 - Run for visualisation purposes\n  1 - Run to collect iteration at which equilibrium is reached\n      WARNING: Will run UNTIL equilibrium is reached, may be longer than iterations inputted.\n  2 - Run to find glider speed and COM over time\n      WARNING: For initial conditions choose 'Single Glider', or expect inaccurate results.")
