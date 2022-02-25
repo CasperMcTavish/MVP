@@ -440,6 +440,7 @@ def gol_sim_run(lattice_size, sim_type, iterations, mode):
 
         # save COM list
         pos_write(com_list, "com_list.txt")
+        pos_write(iter_list, "iter_list.txt")
         # call function that fits straight line to COM list (when there are 10 points in a row with no interruptions, away from start and end.)
 
         # at end, return 0. This is to be consistent for the equilibrium testing component

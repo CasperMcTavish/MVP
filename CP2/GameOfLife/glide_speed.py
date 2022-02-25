@@ -5,6 +5,7 @@ import math
 import random
 import sys
 import scipy
+import scipy.optimize
 
 from gol_sim import *
 
@@ -12,14 +13,20 @@ from gol_sim import *
 
 # Read the DATA
 positions = read_file("com_list.txt")
+times = read_file("iter_list.txt")
 
 # scrub ugly data
+# positions
 positions = [positions[i].rstrip().lstrip() for i in range(len(positions))]
 positions = [positions[i].split() for i in range(len(positions))]
 positions = (np.array(positions)).astype(float)
 print("Typical positions format:")
 print(" x    y ")
 print(positions[0])
+
+# times
+times = [times[i].rstrip().lstrip() for i in range(len(times))]
+times = (np.array(times)).astype(float)
 
 
 # Find concurrent points (dont cross lattice boundary) to average over.
@@ -73,12 +80,18 @@ for i in range(len(positions)):
 #print(speed_list[0])
 #print(speed_list[0][0])
 #print(speed_list[0][1])
+#print(speed_list)
+
+# X and Y list:
+#print(np.array(speed_list)[:,0])
+#print(np.array(speed_list)[:,1])
+
 #print("")
 #print(speed_list[-1:])
 #print(speed_list[-1:][0][0])
 #print(speed_list[-1:][0][1])
 
-# Find speed (take first and last points), x2-x1, y2-y1 to find distance travelled. Magnitude via sqrt(x^2+y^2), then div by number of iterations
+# Find speed ROUGH (take first and last points), x2-x1, y2-y1 to find distance travelled. Magnitude via sqrt(x^2+y^2), then div by number of iterations
 
 # Indexing because slicing a list like this creates its own list...lets not talk about it
 deltaX = speed_list[0][0] - speed_list[-1:][0][0]
@@ -86,8 +99,55 @@ deltaY = speed_list[0][1] - speed_list[-1:][0][1]
 mag_delta = np.sqrt(deltaX**2 + deltaY**2)
 
 # data taken every 10 iterations, so multiply list size by 10
+# -1 as first component of the list counts as the 'start'
 iter_no = len(speed_list)*10
 
 speed = mag_delta/iter_no
 
-print("Total Speed of Glider: {:.2f} cells per iteration".format(speed))
+print("Total Speed of Glider, Rough calculation: {:.5f} cells per iteration".format(speed))
+
+
+# Now calculate it by fitting, which seems a bit derivative but may give different answers
+
+# def linear function
+def lin_func(x, m, b):
+    return m*x + b
+
+# Apply fitting
+# Can take any values from time list, as equally spaced
+# Just need to ensure correct length
+
+time_list = times[:len(speed_list)]
+x_list = np.array(speed_list)[:,0]
+y_list = np.array(speed_list)[:,1]
+
+# X fitting
+popt_x, pcov_x = scipy.optimize.curve_fit(lin_func, time_list , x_list)
+
+
+# Y fitting
+popt_y, pcov_y = scipy.optimize.curve_fit(lin_func, time_list , y_list)
+
+# Plot X fit
+plt.plot(time_list, lin_func(time_list, *popt_x), 'g--', label='fit: m=%5.3f, b=%5.3f, ' % tuple(popt_x))
+plt.scatter(time_list, x_list, label= "Data")
+plt.xlabel("Iteration number/Time")
+plt.ylabel("X position")
+plt.title("Flight of glider across X coordinates and time with fitting")
+plt.legend()
+plt.savefig("Xtime_fitting.png")
+plt.show()
+
+# Plot Y fit
+plt.plot(time_list, lin_func(time_list, *popt_y), 'g--', label='fit: m=%5.3f, b=%5.3f, ' % tuple(popt_y))
+plt.scatter(time_list, y_list, label= "Data")
+plt.xlabel("Iteration number/Time")
+plt.ylabel("Y position")
+plt.title("Flight of glider across Y coordinates and time with fitting")
+plt.legend()
+plt.savefig("Ytime_fitting.png")
+plt.show()
+
+# Average speed via magnitude
+av_speed = np.sqrt(popt_x[0]**2 + popt_y[0]**2)
+print("Total Speed of Glider, via fitting: {:.5f} cells per iteration".format(av_speed))
