@@ -15,6 +15,12 @@ sys.path.append('../GameOfLife')
 
 from gol_sim import read_file
 
+
+#####################
+# CODE FOR PLOTTING PHASE TRANSITIONS
+#####################
+
+
 positions = read_file("Coordinate_lists")
 positions = [positions[i].rstrip().lstrip() for i in range(len(positions))]
 positions = [positions[i].split() for i in range(len(positions))]
@@ -47,8 +53,8 @@ plt.show()
 
 imsh = plt.imshow(DATA, extent=[POS0.min(), POS0.max(), POS1.max(), POS1.min()])
 plt.colorbar(imsh)
-plt.xlabel("p1")
-plt.ylabel("p3")
+plt.xlabel("p3")
+plt.ylabel("p1")
 plt.title("p1-p3 imshow plot for average infected")
 plt.savefig("p1p3imshowplt.png")
 plt.show()
