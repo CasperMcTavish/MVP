@@ -30,7 +30,7 @@ def immune():
     i_frac_list = []
     i_error_list = []
     # immunity list from 0.1 to 0.6 in steps of 0.05
-    imm_list = np.linspace(0.1,0.3,num=11, endpoint=True)
+    imm_list = np.linspace(0.1,0.5,num=11, endpoint=True)
     # iterate over immunity fractions
     for j in range(len(imm_list)):
         print("Calculating Immunity {}/{}...".format(j,len(imm_list)))
@@ -51,7 +51,7 @@ def immune():
 
 
     # Plot it in here, then Write
-    plt.errorbar(imm_list, i_frac_list, yerr=i_error_list, fmt = 'o')
+    #plt.errorbar(imm_list, i_frac_list, yerr=i_error_list, fmt = 'o')
     plt.errorbar(imm_list, i_frac_list, yerr=i_error_list)
     plt.xlabel("Immunity fraction")
     plt.ylabel("Average Infected fraction of the population")
