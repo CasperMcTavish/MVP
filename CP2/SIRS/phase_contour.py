@@ -34,10 +34,10 @@ def skimmer():
             coord_list.append([p_list[i],p_list[j]])
 
     # Plot 2D contour of av_list values and positions
-    plt.contour(coord_list, i_av_list, cmap='RdGy')
-    plt.show()
-    pos_write(i_av_list, "Average energy lists")
-    pos_write(coord_list, "Coordinate lists")
+    #plt.contourf(coord_list, i_av_list, cmap='RdGy')
+    #plt.show()
+    pos_write(i_av_list, "Average_energy_lists")
+    pos_write(coord_list, "Coordinate_lists")
 
 # run skimmer
 skimmer()
