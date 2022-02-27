@@ -15,24 +15,27 @@ sys.path.append('../GameOfLife')
 
 from gol_sim import read_file
 
-positions = read_file("Coordinate lists")
+positions = read_file("Coordinate_lists")
 positions = [positions[i].rstrip().lstrip() for i in range(len(positions))]
 positions = [positions[i].split() for i in range(len(positions))]
 positions = (np.array(positions)).astype(float)
-data = read_file("Average energy lists")
+data = read_file("Average_energy_lists")
 data = [data[i].rstrip().lstrip() for i in range(len(data))]
 data = (np.array(data)).astype(float)
 
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
-ax.trisurf(positions[:,0], positions[:,1], data, c='r', marker='o')
+ax.scatter(positions[:,0], positions[:,1], data, c='r', marker='o')
+plt.show()
 
-#plt.show()
+# reshape param
+shape = int(np.sqrt(len(positions[:,0])))
+
 
 # Reshaping data to be acceptable
-POS0 = positions[:,0].reshape(6,6)
-POS1 = positions[:,1].reshape(6,6)
-DATA = data.reshape(6,6)
+POS0 = positions[:,0].reshape(shape,shape)
+POS1 = positions[:,1].reshape(shape,shape)
+DATA = data.reshape(shape,shape)
 
 cont = plt.contourf(POS0, POS1, DATA, cmap='RdBu')
 plt.colorbar(cont)
