@@ -25,7 +25,7 @@ positions = read_file("Coordinate_lists")
 positions = [positions[i].rstrip().lstrip() for i in range(len(positions))]
 positions = [positions[i].split() for i in range(len(positions))]
 positions = (np.array(positions)).astype(float)
-data = read_file("Average_energy_lists")
+data = read_file("Proper_Average_energy_lists")
 data = [data[i].rstrip().lstrip() for i in range(len(data))]
 data = (np.array(data)).astype(float)
 

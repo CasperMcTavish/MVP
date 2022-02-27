@@ -16,6 +16,7 @@ from gol_sim import pos_write
 # Create function that scans across all values of p1 and p3, where p2 = 0.5
 def skimmer():
 
+    lattice_size = 50
     p2 = 0.5
     # create lists for p1 and p3 resolution
     i_av_list = []
@@ -28,7 +29,7 @@ def skimmer():
         for j in range(len(p_list)):
             print("p1: {:.5f}   p3: {:.5f}".format(p_list[i],p_list[j]))
             # return list of I/N values from run
-            i_list = run_code(50, 1100, p_list[i], p2, p_list[j], 2)
+            i_list = run_code(lattice_size, 1100, p_list[i], p2, p_list[j], 2)
             # add true average to list
             i_av_list.append(sum(i_list)/len(i_list))
             coord_list.append([p_list[i],p_list[j]])

@@ -157,7 +157,8 @@ def iteration_SIRS(lattice_size, iterations, p1,p2,p3, vis):
         if (i%10==0) and (i>100):
             # Find number of infected in array
             i_n_prev = i_n
-            i_n = np.count_nonzero(array == 1)/len(array)
+            # Dividing by N^2
+            i_n = np.count_nonzero(array == 1)/(len(array)*len(array))
             # append average infected to list
             inf_av.append(i_n)
             # if i_n doesnt change by more than 0.001 for N iterations, break loop
