@@ -143,7 +143,6 @@ def iteration_SIRS(lattice_size, iterations, p1,p2,p3, vis, imm=0):
     i_n = 0
     # Set custom cmap and its range
     cmap = mpl.cm.get_cmap("inferno", 3)
-
     for i in range(iterations):
         # find new matrix,
         for _ in range(lattice_size**2):
@@ -195,7 +194,7 @@ def run_code(lattice, iterations, p1, p2, p3, vis, imm=0):
     p3 = float(p3)
     vis = int(vis)
     # run the iterator, collecting average I values
-    inf_av = iteration_SIRS(lattice, iterations, p1, p2, p3, vis)
+    inf_av = iteration_SIRS(lattice, iterations, p1, p2, p3, vis, imm)
 
     # plot average I by time
     time_list = np.linspace(0,len(inf_av),num=len(inf_av), endpoint=False)
