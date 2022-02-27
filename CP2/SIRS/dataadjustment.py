@@ -17,6 +17,8 @@ from gol_sim import read_file, pos_write
 
 #############
 # Altering energy list to be accurate
+# This was just due to my mistakes in dividing our infection results by correct values
+# Here we apply another division of lattice_size to our data, as we only did it once in the initial calculation.
 #############
 
 lattice_size = 50

@@ -46,7 +46,7 @@ import matplotlib as mpl
 ####
 # Create a grid of spins i-rows,j-columns, limited to 0, 1 and 2
 # 0 = Susceptible, 1 = Infected, 2 = Recovered
-def SIRS_array(lattice_size):
+def SIRS_array(lattice_size, imm=0):
     # Setting up boolean array of zeros and ones
     # As python takes boolean True and False as 0 and 1, they can be used in mathematical operations (useful!) while being clamped to [0,1] range
     array = np.zeros((lattice_size, lattice_size), dtype=int)
@@ -56,7 +56,11 @@ def SIRS_array(lattice_size):
         for j in range(lattice_size):
             # set the array values randomly to 0, 1 or 2
             randomval = round(random.uniform(0,2))
-            array[i,j] = int(randomval)
+            # check to see if it will be made immune, if so, set to 3
+            if roll(imm):
+                array[i,j] = 3
+            else:
+                array[i,j] = int(randomval)
 
     return array
 
@@ -128,11 +132,11 @@ def array_update(array, lattice_size, p1, p2, p3):
     return True
 
 
-def iteration_SIRS(lattice_size, iterations, p1,p2,p3, vis):
+def iteration_SIRS(lattice_size, iterations, p1,p2,p3, vis, imm=0):
     # make initial array
-    array = SIRS_array(lattice_size)
+    array = SIRS_array(lattice_size, imm)
     # set up
-    inf_av = []
+    inf_tot = []
     # include redundancy count, N defines how long before quitting
     N = 10
     redundancy = 0
@@ -157,20 +161,20 @@ def iteration_SIRS(lattice_size, iterations, p1,p2,p3, vis):
         if (i%10==0) and (i>100):
             # Find number of infected in array
             i_n_prev = i_n
-            # Dividing by N^2
-            i_n = np.count_nonzero(array == 1)/(len(array)*len(array))
+            # Calculating total number of infected sites
+            i_n = np.count_nonzero(array == 1)
             # append average infected to list
-            inf_av.append(i_n)
+            inf_tot.append(i_n)
             # if i_n doesnt change by more than 0.001 for N iterations, break loop
             if (math.fabs(i_n_prev - i_n) < 0.001):
                 redundancy += 1
             else:
                 redundancy = 0
 
-        # print sweeps every 100
-        if (i%100==0):
-            i_n_visual = np.count_nonzero(array == 1)/len(array)
-            print("Sweep {}/{}\nAverage Infection: {:.4f}".format(i,iterations,i_n_visual))
+        # print sweeps every 100, dont show when averaging a lot
+        if (i%100==0) and (vis!=3):
+            i_n_visual = np.count_nonzero(array == 1)
+            print("Sweep {}/{}\nTotal Infection: {:.4f}".format(i,iterations,i_n_visual))
 
 
         # redundancy checks, if no change for 10 runs, break
@@ -178,11 +182,11 @@ def iteration_SIRS(lattice_size, iterations, p1,p2,p3, vis):
             print("No changes after {} sweeps, quitting...".format(N))
             break
 
-    return inf_av
+    return inf_tot
 
 
 # MAIN FUNCTION
-def run_code(lattice, iterations, p1, p2, p3, vis):
+def run_code(lattice, iterations, p1, p2, p3, vis, imm=0):
     # convert sys arguments from string to floats/ints
     lattice = int(lattice)
     iterations = int(iterations)
@@ -196,7 +200,7 @@ def run_code(lattice, iterations, p1, p2, p3, vis):
     # plot average I by time
     time_list = np.linspace(0,len(inf_av),num=len(inf_av), endpoint=False)
 
-    if (vis!=2):
+    if (vis!=2 and vis!=3):
         plt.clf()
         plt.plot(time_list, inf_av)
         plt.scatter(time_list, inf_av)
@@ -210,8 +214,11 @@ def run_code(lattice, iterations, p1, p2, p3, vis):
 # check if not imported
 if __name__ == "__main__":
     # Check to make sure enough arguments
-    if len(sys.argv) == 7:
+    if len(sys.argv) == 8:
+        run_code(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7])
+    # if no immunity fraction
+    elif len(sys.argv) == 7:
         run_code(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
     else:
-        print("\nScript takes exactly 5 arguments, " + str(len(sys.argv)-1) + " were given")
-        print("\nPlease input:\n\n LATTICE SIZE\n\n ITERATIONS\n\n Probability of Infection\n\n Probability of Recovery\n\n Probability of Re-susceptibility\n\n Mode\n 0 - I/N plot only\n 1 - Visualisation & Data Collection\n 2 - Contour plot only")
+        print("\nScript takes at least 6 arguments, " + str(len(sys.argv)-1) + " were given")
+        print("\nPlease input:\n\n LATTICE SIZE\n\n ITERATIONS\n\n Probability of Infection\n\n Probability of Recovery\n\n Probability of Re-susceptibility\n\n Mode\n 0 - I/N plot only\n 1 - Visualisation & Data Collection\n 2 - Contour plot only\n 3 - Immunity Based Plot\n\n Immunity fraction (SET TO IMMUNITY BASED PLOT)")
