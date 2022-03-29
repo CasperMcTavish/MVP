@@ -71,7 +71,8 @@ def update_phi(array, lattice_size, m, dt, dx, mu):
 def free_energy(array, a, k, dx):
 
     # calculate free energy density
-    f = -a/2 * array**2 + a/4 * array**4 + k/(2*dx**2) * ((np.roll(array,1,axis=0) - np.roll(array,-1,axis=0))**2 + (np.roll(array,1,axis=1) - np.roll(array,-1,axis=1))**2)
+    gradphi = 1/(dx**2)*((np.roll(array,1,axis=0) - array)**2 + (np.roll(array,1, axis=1)-array)**2)
+    f = -a/2 * array**2 + a/4 * array**4 + (k/2) * gradphi
     return f
 
 def plot_free(time_list, free_list):
@@ -111,7 +112,7 @@ def main(lattice_size, iterations, phi, dx, dt):
         newphi = update_phi(array, lattice_size, m, dt, dx, mu_list)
 
         # plot every nth, after the first
-        if (q%n==0):
+        if (q%n==0) and q>101:
             print("{}/{}".format(q,iterations))
             #print("Average of mu: {:.4f}\nTotal phi: {:.4f}".format(np.mean(mu_list), np.sum(array)))
             print()
