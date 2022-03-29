@@ -28,30 +28,13 @@ def init_array(lattice_size, phi):
 
 
 def chem_pot(array, lattice_size, a, k, dx):
-    # Slower method, because of the copying of row every time. NEED TO ASK WHY THIS WAS MEANT TO BE THE FASTER WAY
-    time_start = time.time()
-
-    # compute chemical potential across the array
-    # create mu array
-    mu = np.zeros((lattice_size, lattice_size), dtype=float)
-
-    for i in range(len(array)**2):
-        # apply mu calculation
-        comp1 = -a*array[0,0] + a*array[0,0]**3
-        comp2 = -(k/dx**2)*(array[1,0] + array[-1,0] + array[0,1] + array[0,-1] - 4*array[0,0])
-        # apply to mu
-        mu[0,0] = comp1 + comp2
-        # roll to next step, apparently this is quicker?
-        mu = np.roll(mu,1)
-        array = np.roll(array, 1)
-
-    # print time
-    print("Time taken: {0:.6g}s".format(time.time()-time_start))
+    # apply mu calculation
+    mu = -a*array + a*np.power(array,3)-(k/dx**2)*(np.roll(array,1,axis=0) + np.roll(array,-1,axis=0) + np.roll(array,1,axis=1) + np.roll(array,-1,axis=1) - 4*array)
 
     return mu
 
 def chem_pot_iterations(array, lattice_size, a, k, dx):
-    # Faster method because you dont need to copy after every roll
+    # slower method
 
     #time_start = time.time()
 
@@ -80,27 +63,25 @@ def chem_pot_iterations(array, lattice_size, a, k, dx):
 def update_phi(array, lattice_size, m, dt, dx, mu):
     # returns a new array based on the previous array and mu array
 
-    # create new array of zeros
-    newarray = np.zeros((lattice_size, lattice_size), dtype=float)
-    for i in range(len(array)):
-        for j in range(len(array)):
-            # set boundary values
-            left = (i, j-1)
-            right = (i, (j+1) % lattice_size)
-            top = (i-1, j)
-            bottom = ((i+1) % lattice_size, j)
-
-            # computation
-            newarray[i,j] = array[i,j] + ((m*dt)/dx**2) * (mu[bottom[0],bottom[1]] + mu[top[0],top[1]] + mu[right[0], right[1]] + mu[left[0], left[1]] - 4*mu[i,j])
+    # complete the discretised calculation
+    newarray = array + ((m*dt)/dx**2) * ((np.roll(mu,1,axis=0)) + (np.roll(mu,-1,axis=0)) + (np.roll(mu,1,axis=1)) + (np.roll(mu,-1,axis=1)) - 4*mu)
     # return array
     return newarray
 
-def free_energy(array, a, k):
+def free_energy(array, a, k, dx):
 
     # calculate free energy density
-    for i in range(len(array)):
-        for j in range(len(array)):
-            print("hold")
+    f = -a/2 * array**2 + a/4 * array**4 + k/(2*dx**2) * ((np.roll(array,1,axis=0) - np.roll(array,-1,axis=0))**2 + (np.roll(array,1,axis=1) - np.roll(array,-1,axis=1))**2)
+    return f
+
+def plot_free(time_list, free_list):
+    # clear plot
+    plt.clf()
+    # plot the free energy
+
+    plt.scatter(time_list, free_list, s = 0.01)
+    plt.plot(time_list, free_list)
+    plt.show()
 
 
 # main iterator here
@@ -118,35 +99,40 @@ def main(lattice_size, iterations, phi, dx, dt):
     # set lists up
     mu_list = []
     free_list = []
+    time_list = []
 
     for q in range(iterations):
         # find mu array
-        t0 = time.time()
-        mu_list = chem_pot_iterations(array, lattice_size, a, k, dx)
+        #mu_list = chem_pot_iterations(array, lattice_size, a, k, dx)
 
-        #mu_list_slow = chem_pot(array, lattice_size, a, k, dx)
+        mu_list = chem_pot(array, lattice_size, a, k, dx)
 
         # comput phi(n+1)
         newphi = update_phi(array, lattice_size, m, dt, dx, mu_list)
 
-        # plot every nth
+        # plot every nth, after the first
         if (q%n==0):
             print("{}/{}".format(q,iterations))
-            print("Average of mu: {:.4f}\nTotal phi: {:.4f}".format(np.mean(mu_list), np.sum(array)))
+            #print("Average of mu: {:.4f}\nTotal phi: {:.4f}".format(np.mean(mu_list), np.sum(array)))
             print()
             plt.clf()
             im=plt.imshow(array, animated=True)
             plt.draw()
             plt.colorbar(im)
-            plt.pause(0.0005)
+            plt.pause(0.00005)
+            # append to time list
+            time_list.append(q)
 
             # also find free energy from the array
-
+            free_list.append(np.sum(free_energy(array, a, k, dx)))
 
         # then update
         array = np.copy(newphi)
 
-
+    # save data
+    np.savetxt("time_free.csv", np.array([time_list, free_list]).T, delimiter=",")
+    # plot free energy against iterations
+    plot_free(time_list, free_list)
 
 
 # CALL FUNCTION
