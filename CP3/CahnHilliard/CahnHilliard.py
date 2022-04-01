@@ -71,8 +71,8 @@ def update_phi(array, lattice_size, m, dt, dx, mu):
 def free_energy(array, a, k, dx):
 
     # calculate free energy density
-    gradphi = 1/(dx**2)*((np.roll(array,1,axis=0) - array)**2 + (np.roll(array,1, axis=1)-array)**2)
-    f = -a/2 * array**2 + a/4 * array**4 + (k/2) * gradphi
+    gradphisq = 1/(dx**2)*(np.power((np.roll(array,1,axis=0) - array),2) + np.power((np.roll(array,1, axis=1)-array),2))
+    f = -(a/2) * np.power(array,2) + (a/4) * np.power(array,4) + (k/2) * gradphisq
     return f
 
 def plot_free(time_list, free_list):
@@ -126,6 +126,8 @@ def main(lattice_size, iterations, phi, dx, dt):
 
             # also find free energy from the array
             free_list.append(np.sum(free_energy(array, a, k, dx)))
+
+            #print(sum(array))
 
         # then update
         array = np.copy(newphi)
