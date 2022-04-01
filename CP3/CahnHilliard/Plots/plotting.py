@@ -11,6 +11,8 @@ def plot_free_energy(file_name):
     plt.title(name)
     plt.xlabel("Iterations")
     plt.ylabel("Free Energy")
+    name = file_name + ".png"
+    plt.savefig(name)
     plt.show()
 
 
