@@ -28,17 +28,21 @@ def init_array(lattice_size, gam):
 
     return array, rho
 
-# QUIVER MATPLOTLIB
+# Seidel updater
 
-def update_gam(array, lattice_size, dx, rho):
-    # update the gamma values
+def update_gam(array, lattice_size, rho):
 
-    # complete the discretised calculation
-    newarray = 1/6 * (np.roll(array,1,axis=0) + np.roll(array,-1,axis=0) + np.roll(array,1,axis=1) + np.roll(array,-1,axis=1) + np.roll(array,1,axis=2) + np.roll(array,-1,axis=2) + rho)
+    for i in range(len(array)):
+        for j in range(len(array)):
+            for k in range(len(array)):
+                # set edges to 0
+                if (i == 0) or (j == 0) or (k == 0) or (i==lattice_size-1) or (j==lattice_size-1) or (k==lattice_size-1):
+                    array[i,j,k] = 0
+                else:
+                    array[i,j,k] = 1/6 * (array[i+1,j,k] + array[i-1,j,k] + array[i,j+1,k] + array[i,j-1,k] + array[i,j,k+1] + array[i,j,k-1] + rho[i,j,k])
 
-    # set the edges to zero
-    newarray[:,[0,-1],:] = newarray[[0,-1]] = newarray[:,:,[0,-1]] = 0
-    return newarray
+    return array
+
 
 def e_field(array, dx):
     # define electric field
@@ -57,7 +61,6 @@ def checker(array, newarray):
     return value
 
 
-
 def iterator(lattice_size, dx, accuracy):
 
     # initialise array
@@ -70,11 +73,12 @@ def iterator(lattice_size, dx, accuracy):
     while(True):
 
         # update array
-        newarray = update_gam(array, lattice_size, dx, rho)
+        savearray = np.copy(array)
+        array = update_gam(array, lattice_size, rho)
 
         # check if the value between these two arrays is zero, if so then break
         # if not, then continue
-        value = checker(array, newarray)
+        value = checker(savearray, array)
 
         if (i%100==0):
             # print the sum of the differences
@@ -83,10 +87,10 @@ def iterator(lattice_size, dx, accuracy):
         # when convergence is low enough, break out the loop
         # standard accuracy -> 0.01 or 0.001
         if (abs(np.sum(value)) < accuracy):
-            array = newarray
+            #array = newarray
             break;
         else:
-            array = newarray
+            #array = newarray
             i += 1
 
 
@@ -153,7 +157,7 @@ if __name__ == "__main__":
     # Check to make sure enough arguments
     if len(sys.argv) == 4:
         # run code, force as ints/floats
-        iterator(int(sys.argv[1]), float(sys.argv[2], float(sys.argv[3])))
+        iterator(int(sys.argv[1]), float(sys.argv[2]), float(sys.argv[3]))
     else:
         print("\nScript takes exactly 3 arguments, " + str(len(sys.argv)-1) + " were given")
         print("\nPlease input:\n\nLattice Size (square)\n\ndx\n\nAccuracy of discretisation")
