@@ -7,10 +7,10 @@ import sys
 import scipy
 import time
 
-# TO DO
-# ADD A AND B CALCULATIONS IN HERE OR IN THE ANALYSIS FILE
-# THEN DO IT FOR SEIDEL
-# THEN DO SOR
+# FOR CONTEXT
+# rho -> J (current)
+# phi array -> A array
+
 
 
 # JACOBIAN, BUT 3D FOR MAGNETIC WIRE PASSING MIDPOINT
@@ -24,7 +24,7 @@ import time
 # Create a grid of spins i-rows,j-columns, will set everything to zero except central point source
 def init_array(lattice_size, gam):
 
-    # set array of zeros except for central point, this is rho array
+    # set array of zeros except for central point, this is J(current) array
     array = np.random.normal(gam,1/10, size = (lattice_size,lattice_size,lattice_size))
     rho = np.zeros((lattice_size,lattice_size,lattice_size), dtype=float)
     # set central point to 1 across all layers
@@ -51,15 +51,30 @@ def e_field(array, dx):
     e_xfield = -(1/(2*dx)) * (np.roll(array,-1,axis=0) - np.roll(array,1,axis=0))
     e_yfield = -(1/(2*dx)) * (np.roll(array,-1,axis=1) - np.roll(array,1,axis=1))
     e_zfield = -(1/(2*dx)) * (np.roll(array,-1,axis=2) - np.roll(array,1,axis=2))
-    #print(np.sum(e_xfield))
-    #print(np.sum(e_yfield))
-    #print(np.sum(e_zfield))
+
     e_field = e_xfield + e_yfield + e_zfield
     return (e_xfield,e_yfield,e_zfield, e_field)
 
+def b_field(array, dx):
+    # produce magnetic field
+
+    # dz = 0 so ignore those components, Ax = Ay = 0
+    dyAz = (1/(2*dx)) * (np.roll(array,-1,axis=2) - np.roll(array,1,axis=2))
+    dzAy = 0
+    dzAx = 0
+    dxAz = (1/(2*dx)) * (np.roll(array,-1,axis=0) - np.roll(array,1,axis=0))
+    dxAy = 0
+    dyAx = 0
+    b_xfield = dyAz - dzAy
+    b_yfield = dzAx - dxAz
+    b_zfield = dxAy - dyAx
+
+    b_field = np.sqrt(np.square(b_xfield) + np.square(b_yfield) + np.square(b_zfield))
+    return (b_xfield, b_yfield, b_zfield, b_field)
+
 def checker(array, newarray):
     # check the difference between the phi values of each array
-    value = np.sum(abs(newarray - array))
+    value = np.sum(np.abs(newarray - array))
     return value
 
 
@@ -116,44 +131,24 @@ def iterator(lattice_size, dx, accuracy):
     plt.title("Potential at centre of array")
     plt.savefig("potential.png")
     plt.show()
-    quit()
+
     # plot e-field QUIVER
     x = y = np.linspace(0,lattice_size-1,lattice_size)
     X,Y = np.meshgrid(x,y)
     #DX,DY = np.gradient(E_F[int(lattice_size/2)])
 
-    E_Fyslice = E_Fy[int(lattice_size/2)]
-    E_Fxslice = E_Fx[int(lattice_size/2)]
-    E_Fynorm = E_Fy/(np.power(E_Fy,2)+(np.power(E_Fx,2)))
-    E_Fxnorm = E_Fx/(np.power(E_Fy,2)+(np.power(E_Fx,2)))
-    # set edges to zero
-    E_Fynorm[:,[0,-1],:] = E_Fynorm[[0,-1]] = E_Fynorm[:,:,[0,-1]] = E_Fxnorm[:,[0,-1],:] = E_Fxnorm[[0,-1]] = E_Fxnorm[:,:,[0,-1]] = 0
-
-    plt.quiver(Y,X,E_Fyslice,E_Fxslice)
-    plt.title("YX - Ey,Ex")
+    imsh = plt.imshow(B_F[int(lattice_size/2)])
+    plt.colorbar(imsh)
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.title("Magnetic field at centre of array")
+    plt.savefig("magnetic.png")
     plt.show()
 
-    plt.quiver(X,Y,E_Fyslice,E_Fxslice)
-    plt.title("XY - Ey,Ex")
-    plt.show()
-
-    plt.quiver(X,Y,E_Fxslice,E_Fyslice)
-    plt.title("XY - Ex,Ey")
-    plt.show()
-
-
-    plt.quiver(X,Y,E_Fxnorm[int(lattice_size/2)],E_Fynorm[int(lattice_size/2)])
-    plt.title("XYnorm - Ex,Ey")
-    plt.show()
-
-    plt.quiver(Y,X,E_Fynorm[int(lattice_size/2)],E_Fxnorm[int(lattice_size/2)])
-    plt.title("YXnorm - Ey,Ex")
-    plt.show()
 
     # SAVE EFIELD AND GRAD FIELD
     # save xy slice of 3D array
     np.save("phiarray.npy", array)
-    np.save("e_farray.npy", E_F)
 
 # CALL FUNCTION
 # check if not imported

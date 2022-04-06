@@ -7,6 +7,9 @@ import sys
 import scipy
 import time
 
+def plot_quiver2D(x,y,u,v):
+    plt.quiver(x,y,u,v)
+
 # JACOBIAN, BUT 3D
 
 ######################
@@ -46,9 +49,9 @@ def update_gam(array, lattice_size, rho):
 
 def e_field(array, dx):
     # define electric field
-    e_xfield = -(1/(2*dx)) * (np.roll(array,1,axis=0) - np.roll(array,-1,axis=0))
-    e_yfield = -(1/(2*dx)) * (np.roll(array,1,axis=1) - np.roll(array,-1,axis=1))
-    e_zfield = -(1/(2*dx)) * (np.roll(array,1,axis=2) - np.roll(array,-1,axis=2))
+    e_xfield = -(1/(2*dx)) * (np.roll(array,-1,axis=0) - np.roll(array,1,axis=0))
+    e_yfield = -(1/(2*dx)) * (np.roll(array,-1,axis=1) - np.roll(array,1,axis=1))
+    e_zfield = -(1/(2*dx)) * (np.roll(array,-1,axis=2) - np.roll(array,1,axis=2))
     #print(np.sum(e_xfield))
     #print(np.sum(e_yfield))
     #print(np.sum(e_zfield))
@@ -57,7 +60,7 @@ def e_field(array, dx):
 
 def checker(array, newarray):
     # check the difference between the phi values of each array
-    value = array - newarray
+    value = np.sum(np.abs(array - newarray))
     return value
 
 
@@ -82,11 +85,11 @@ def iterator(lattice_size, dx, accuracy):
 
         if (i%100==0):
             # print the sum of the differences
-            print("Convergence factor: {0:.6f}".format(np.sum(value)))
+            print("Convergence factor: {0:.6f}".format(value))
 
         # when convergence is low enough, break out the loop
         # standard accuracy -> 0.01 or 0.001
-        if (abs(np.sum(value)) < accuracy):
+        if (value < accuracy):
             #array = newarray
             break;
         else:
@@ -117,7 +120,7 @@ def iterator(lattice_size, dx, accuracy):
     x = y = np.linspace(0,lattice_size-1,lattice_size)
     X,Y = np.meshgrid(x,y)
     #DX,DY = np.gradient(E_F[int(lattice_size/2)])
-
+    '''
     E_Fyslice = E_Fy[int(lattice_size/2)]
     E_Fxslice = E_Fx[int(lattice_size/2)]
     E_Fynorm = E_Fy/(np.power(E_Fy,2)+(np.power(E_Fx,2)))
@@ -145,10 +148,24 @@ def iterator(lattice_size, dx, accuracy):
     plt.quiver(Y,X,E_Fynorm[int(lattice_size/2)],E_Fxnorm[int(lattice_size/2)])
     plt.title("YXnorm - Ey,Ex")
     plt.show()
-
+    '''
     # SAVE EFIELD AND GRAD FIELD
     # save xy slice of 3D array
-    np.savetxt("phiarray.txt", array[int(lattice_size/2)])
+    np.save("phiarray.npy", array)
+
+    # collect e field plot and multiply vectors by 5 to be made visible
+    e_f_grad = np.gradient(E_F[int(lattice_size/2)+1])
+    e_fx = (e_f_grad[0]/(np.sqrt(np.square(e_f_grad[0]) + np.square(e_f_grad[1]))))
+    e_fy = (e_f_grad[1]/(np.sqrt(np.square(e_f_grad[0]) + np.square(e_f_grad[1]))))
+
+    # plot quivers
+    step = 5
+    plot_quiver2D(X[::step,::step],Y[::step,::step], e_fy[::step,::step],e_fx[::step,::step])
+    plt.title("Electric field from central slice")
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.savefig("efield.png")
+    plt.show()
 
 # CALL FUNCTION
 # check if not imported

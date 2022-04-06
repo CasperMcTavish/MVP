@@ -21,7 +21,7 @@ def init_array(lattice_size, gam):
     # set array of zeros except for central point, this is rho array
     array = np.random.normal(gam,1/10, size = (lattice_size,lattice_size,lattice_size))
     rho = np.zeros((lattice_size,lattice_size,lattice_size), dtype=float)
-    # set central point to 1 
+    # set central point to 1
     mid_point = int(lattice_size/2)
     rho[mid_point,mid_point,mid_point] = 1
 
@@ -42,39 +42,16 @@ def update_gam(array, lattice_size, dx, rho):
 
 def e_field(array, dx):
     # define electric field
-    '''
-    # trying the old school way
-    e_xfield = np.zeros((len(array),len(array),len(array)))
-    e_yfield = np.zeros((len(array),len(array),len(array)))
-    e_zfield = np.zeros((len(array),len(array),len(array)))
-    for i in range(len(array)):
-        for j in range(len(array)):
-            for k in range(len(array)):
-                # apply limits to the edges
-                if (i==0) or (j==0) or (k==0) or (i==len(array)) or (j==len(array)) or (k==len(array)):
-                    e_xfield[i,j,k] = 0
-                    e_yfield[i,j,k] = 0
-                    e_zfield[i,j,k] = 0
-                else:
-
-                    e_xfield[i,j,k] = -(1/(2*dx) * (array[i+1,j,k]) + array[i-1,j,k])
-                    e_yfield[i,j,k] = -(1/(2*dx) * (array[i,j+1,k]) + array[i,j-1,k])
-                    e_zfield[i,j,k] = -(1/(2*dx) * (array[i,j,k+1]) + array[i,j,k-1])
-    '''
     e_xfield = -(1/(2*dx)) * (np.roll(array,-1,axis=0) - np.roll(array,1,axis=0))
     e_yfield = -(1/(2*dx)) * (np.roll(array,-1,axis=1) - np.roll(array,1,axis=1))
     e_zfield = -(1/(2*dx)) * (np.roll(array,-1,axis=2) - np.roll(array,1,axis=2))
 
-
-    #print(np.sum(e_xfield))
-    #print(np.sum(e_yfield))
-    #print(np.sum(e_zfield))
     e_field = e_xfield + e_yfield + e_zfield
     return (e_xfield,e_yfield,e_zfield, e_field)
 
 def checker(array, newarray):
     # check the difference between the phi values of each array
-    value = np.sum(abs(newarray - array))
+    value = np.sum(np.abs(newarray - array))
     return value
 
 
@@ -131,43 +108,7 @@ def iterator(lattice_size, dx, accuracy):
     plt.title("Potential at centre of array")
     plt.savefig("potential.png")
     plt.show()
-    '''
-    # plot e-field QUIVER
-    x = y = np.linspace(0,lattice_size-1,lattice_size)
-    X,Y = np.meshgrid(x,y)
-    #DX,DY = np.gradient(E_F[int(lattice_size/2)])
-
-    E_Fyslice = E_Fy[int(lattice_size/2)]
-    E_Fxslice = E_Fx[int(lattice_size/2)]
-    E_Fynorm = E_Fy/(np.power(E_Fy,2)+(np.power(E_Fx,2)))
-    E_Fxnorm = E_Fx/(np.power(E_Fy,2)+(np.power(E_Fx,2)))
-    # set edges to zero
-    E_Fynorm[:,[0,-1],:] = E_Fynorm[[0,-1]] = E_Fynorm[:,:,[0,-1]] = E_Fxnorm[:,[0,-1],:] = E_Fxnorm[[0,-1]] = E_Fxnorm[:,:,[0,-1]] = 0
-
-    plt.quiver(Y,X,E_Fyslice,E_Fxslice)
-    plt.title("YX - Ey,Ex")
-    plt.show()
-
-    plt.quiver(X,Y,E_Fyslice,E_Fxslice)
-    plt.title("XY - Ey,Ex")
-    plt.show()
-
-    plt.quiver(X,Y,E_Fxslice,E_Fyslice)
-    plt.title("XY - Ex,Ey")
-    plt.show()
-
-
-    plt.quiver(X,Y,E_Fxnorm[int(lattice_size/2)],E_Fynorm[int(lattice_size/2)])
-    plt.title("XYnorm - Ex,Ey")
-    plt.show()
-
-    plt.quiver(Y,X,E_Fynorm[int(lattice_size/2)],E_Fxnorm[int(lattice_size/2)])
-    plt.title("YXnorm - Ey,Ex")
-    plt.show()
-
-    # SAVE EFIELD AND GRAD FIELD
-    # save 3D arrays
-    '''
+    
     np.save("phiarray.npy", array)
     #np.save("e_farray.npy", E_F)
     #np.save("e_f_xyzarray.npy", np.array[E_Fx, E_Fy, E_Fz])
