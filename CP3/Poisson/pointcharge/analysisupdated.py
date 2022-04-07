@@ -8,69 +8,9 @@ import scipy
 import time
 import scipy.optimize
 
-# Plot the massive tuples
-def plot_tuple_array(tuple_array, name, xlabel, ylabel):
-    # Splits array of tuples, plots it and then saves it
-
-    x_val = [x[0] for x in tuple_array]
-    y_val = [x[1] for x in tuple_array]
-
-    save_name = name + ".png"
-    plt.scatter(x_val, y_val, s=0.5)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.title(name)
-    plt.savefig(save_name)
-    plt.show()
-
-
-def plot_tuple_array_fit(tuple_array, func, xlower_lim, xupper_lim, name, xlabel, ylabel):
-
-    # Take slice of the array for fitting
-    cut_arrayx = []
-    cut_arrayy = []
-    for i in range(len(tuple_array)):
-        if (tuple_array[i][0] > xlower_lim) and (tuple_array[i][0] < xupper_lim):
-            cut_arrayx.append(float(tuple_array[i][0]))
-            cut_arrayy.append(float(tuple_array[i][1]))
-
-
-    # collect as x and y (for scatter plot)
-    x_val = [x[0] for x in tuple_array]
-    y_val = [x[1] for x in tuple_array]
-
-
-    # fit
-    popt_x, pcov_x = scipy.optimize.curve_fit(func, cut_arrayx,cut_arrayy)
-    print("Standard error:")
-    print(np.sqrt(np.diag(pcov_x)))
-
-    # plot
-    plt.plot(cut_arrayx, lin_func(cut_arrayx, *popt_x), 'g--', label='fit: m=%5.3f, b=%5.3f, ' % tuple(popt_x))
-    save_name = name + "fitted.png"
-    plt.scatter(x_val, y_val, s=0.5)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.title(name)
-    plt.legend()
-    plt.savefig(save_name)
-    plt.show()
-
-# linear function for fitting
-def lin_func(x,m,b):
-    return m*np.array(x) + b
-
-def e_field(array, dx):
-
-    # Calculate e field across each element
-    e_xfield = -(1/(2*dx)) * (np.roll(array,-1,axis=0) - np.roll(array,1,axis=0))
-    e_yfield = -(1/(2*dx)) * (np.roll(array,-1,axis=1) - np.roll(array,1,axis=1))
-    e_zfield = -(1/(2*dx)) * (np.roll(array,-1,axis=2) - np.roll(array,1,axis=2))
-
-    # find magnitude of e field at each element
-    e_field = np.sqrt(np.square(e_xfield) + np.square(e_yfield) + np.square(e_zfield))
-    return (e_xfield,e_yfield,e_zfield, e_field)
-
+# Import from the correct place
+sys.path.insert(0,"../")
+from analysis_scripts import *
 
 def main():
 
@@ -84,7 +24,7 @@ def main():
 
 
     # collect E field (dx hard coded to 1 here)
-    E_Fx, E_Fy, E_Fz, E_F = e_field(array, 1)
+    E_Fz, E_Fx, E_Fy, E_F = e_field(array, 1)
 
     # Normalise e field
     norm_E_F = E_F/np.max(E_F)
@@ -106,7 +46,7 @@ def main():
 
     # split of lattice for use later
     split = int(lattice_size/2)
-    
+
     # produce array that contains slice of format: (X,Y, VECTOR_POT, E_X,E_Y)
     full_array_slice = []
     for i in range(split):
@@ -116,18 +56,22 @@ def main():
     np.savetxt("XYPOTEXEY.txt", full_array_slice)
 
 
-
+    '''
     # Determind E field gradient along x and y
     e_f_grad = np.gradient(E_F[int(lattice_size/2)])
     e_fx = (e_f_grad[0]/(np.sqrt(np.square(e_f_grad[0]) + np.square(e_f_grad[1]))))
     e_fy = (e_f_grad[1]/(np.sqrt(np.square(e_f_grad[0]) + np.square(e_f_grad[1]))))
 
-    # flip to get accurate e-field lines
+    # flip to get accurate e-field lines (gradient points in wrong direction)
     e_fx = e_fx * -1
     e_fy = e_fy * -1
-
+    '''
+    # split of lattice for use later
+    split = int(lattice_size/2)
+    e_fy = E_Fy[split]/np.sqrt(np.square(E_Fy[split])+np.square(E_Fx[split]))
+    e_fx = E_Fx[split]/np.sqrt(np.square(E_Fy[split])+np.square(E_Fx[split]))
     # plot quivers of e field gradient (step skips positions to make lines more visible)
-    step = 5
+    step = 4
 
     plt.quiver(X[::step,::step],Y[::step,::step], e_fy[::step,::step],e_fx[::step,::step])
     plt.title("Electric field from central slice")
@@ -149,7 +93,7 @@ def main():
 
     # Find midpoint
     midpoint = int(lattice_size/2)
-
+    '''
     # create 3D radius array of equal size to our phi array, with each index being distance from midpoint.
     rad_array = np.zeros((lattice_size,lattice_size,lattice_size), dtype= float)
     for i in range(lattice_size):
@@ -158,8 +102,8 @@ def main():
 
                 # create radial array centred around [0,0]
                 rad_array[i,j,k] = np.sqrt((i-midpoint)**2 + (j-midpoint)**2 + (k-midpoint)**2)
-
-
+    '''
+    rad_array = create_radial_array_point(lattice_size, midpoint)
 
     # sort through both arrays to create tuples that can be plotted on scatter diagrams
     # this takes a while! lots of data points
@@ -181,10 +125,10 @@ def main():
 
                 # add tuples
                 zipped_potential.append((rad_array[i,j,k],array[i,j,k]))
-                zipped_norm_potential.append((rad_array[i,j,k], norm_array[i,j,k]))
-                zipped_log_norm_potential.append((rad_array[i,j,k], np.log(norm_array[i,j,k])))
+                #zipped_norm_potential.append((rad_array[i,j,k], norm_array[i,j,k]))
+                #zipped_log_norm_potential.append((rad_array[i,j,k], np.log(norm_array[i,j,k])))
                 zipped_logR_logV.append((np.log(rad_array[i,j,k]),np.log(array[i,j,k])))
-                zipped_log_R_norm_potential.append((np.log(rad_array[i,j,k]), norm_array[i,j,k]))
+                #zipped_log_R_norm_potential.append((np.log(rad_array[i,j,k]), norm_array[i,j,k]))
                 zipped_e_field.append((rad_array[i,j,k], E_F[i,j,k]))
                 zipped_log_R_log_E.append((np.log(rad_array[i,j,k]),np.log(E_F[i,j,k])))
 
@@ -194,25 +138,10 @@ def main():
     plot_tuple_array(zipped_potential, "R against Potential", "R", "Potential")
 
 
-    # plot normalised tuple array
-    ##plot_tuple_array(zipped_norm_potential, "R against normalised Potential", "R", "Potential")
-
-    # plot normalised log tuple array
-    ##plot_tuple_array(zipped_log_norm_potential, "R against log Potential", "R", "Log Potential")
-
-
-    # plot normalised tuple with log R
-    #plot_tuple_array(zipped_log_R_norm_potential, "LogR against Normalised Potential", "logR", "Potential")
-
-
     plot_tuple_array(zipped_logR_logV, "Log R against Potential", "LogR", "LogV")
 
     # FIT ACROSS RANGE THAT WILL GIVE 1/R GRADIENT, about R= 1.2 -> 2.2
-    plot_tuple_array_fit(zipped_logR_logV, lin_func, 0.5, 1.5, "Fitted LogR LogV plot", "logR", "logV")
-
-
-
-
+    plot_tuple_array_fit(zipped_logR_logV, lin_func, 0.5, 2, "Fitted LogR LogV plot", "logR", "logV")
 
     # Plotting E field contents
     plot_tuple_array(zipped_e_field, "R against E field", "R", "E_field")
